@@ -2,15 +2,15 @@ close all
 
 %% Ecuación paramétrica de una curva 3D
 X = @(t) 0;
-Y = @(t) 260*(cosd(t1)+cosd(t2));
-Z = @(t) 260*(sind(t1)+sind(t2));
+Y = @(t) 180*cosd(t);
+Z = @(t)  180*sind(t);
 
 %Posición inicial
 x1 = X(0); x2 = Y(0); x3 = Z(0);
 
 %% Configuraciones de gráfica 3D
 % Tamaño del gráfico
-ax = axes('XLim',[-600 600],'YLim',[0 600],'ZLim',[0 600]);
+ax = axes('XLim',[-200 200],'YLim',[-200 200],'ZLim',[0 200]);
 % Mantener ejes
 hold(ax,'on');
 % Isómetrica
@@ -22,7 +22,7 @@ daspect([1 1 1])
 
 %% Uso de la ecuación paramétrica 3D
 % i = A:p:B     Para t entre A y B con un paso p
-for i=0:5:180
+for i=0:5:90
    % Gráfico del siguiente segmento de la curva paramétrica
    plot3([x1 X(i)], [x2 Y(i)], [x3 Z(i)],'g');
    % Actualizar las coordenadas
@@ -34,22 +34,22 @@ end
 %% Cálculos geométricos
 function f(iX,iY,iZ,i)
 %% Longitud de los brazos
-l1 = 260;
-l2 = 260;
+l1 = 110;
+l2 = 100;
 
 %% Cinemática inversa
 
 %Radio en el plano XY
-iRho = 0;
+iRho = sqrt(iX * iX + iY * iY);
 %Distancia del origen al extremo
-l0 = sqrt(iY*iY+iZ*iZ);
-%�?ngulo polar del primer segmento
-t0 = 0;
+l0 = sqrt(iRho * iRho + iZ * iZ);
+%Ángulo polar del primer segmento
+t0 = atan2(iY, iX);
 %Coseno del ángulo entre segmentos
-cosG = (1-((iY*iY+iZ*iZ)/2*l1*l1));
-%�?ngulo azimutal del primer segmento
-t2 = atand(iZ/iY)+90-acosd(1-(iY*iY+iZ*iZ)/(2*l1));
-%�?ngulo barrido por el segundo segmento desde la posición de colinealidad con el primero
+cosG = (l1 * l1 + l2 * l2 - l0 * l0) / (2 * l1 * l2);
+%Ángulo azimutal del primer segmento
+t2 = asin(l2 / l0 * sqrt(1 - cosG * cosG)) + atan(iZ/iRho);
+%Ángulo barrido por el segundo segmento desde la posición de colinealidad con el primero
 t3 = t2 - asin((iZ - l1 * sin(t2)) / l2);
 
 %% Cinemática directa 
