@@ -47,6 +47,14 @@ l = linspace(-200,200,100);
 plot(zeros(100,1),l,'Color',[0 0.5 0]); hold on
 text(0,220,"y \geq 0",'Color',[0 0.5 0 ])
 
+l = linspace(-pi/6,pi/2,100);
+plot(600*cos(l),600*sin(l),'Color','m'); hold on
+text(200,400,"Singularidad",'Color','m');
+
+plot(0,0,'*m');
+text(-100,50,"Singularidad",'Color','m');
+
+
 axis equal
 grid on
 xlabel('Y(mm)')
@@ -56,7 +64,7 @@ A = Montecarlo(@(x) constrains(x),3,1e5,[-600 600]) / 10^3;
 disp("El volumen de trabajo tiene " + num2str(A) + " cm^3");
 
 figure
-ax = axes('XLim',[q2lim(1)-0.1 q2lim(2)+0.1],'YLim',[q3lim(1)-0.1 q3lim(2)+0.1]);
+ax = axes('XLim',[0 pi],'YLim',[-pi pi]);
 hold(ax,'on');
 
 l = linspace(q3lim(1),q3lim(2),100);
@@ -87,6 +95,14 @@ l = linspace(-1,1.001,100);
 [q1,q2,q3] = inversa(zeros(1,100),zeros(1,100),l);
 plot(q2,q3,'Color',[0 0.5 0]); hold on
 text(mean(q2),mean(q3),"y \geq 0",'Color',[0 0.5 0]);
+
+l = linspace(0,2.5,100);
+plot(l,l-pi,'Color','m'); hold on
+text(mean(l),mean(l)-pi,"Singularidad",'Color','m');
+l = linspace(0,0.5,100);
+plot(l,l,'Color','m'); hold on
+text(mean(l),mean(l)+0.5,"Singularidad",'Color','m');
+
 
 axis equal
 grid on
