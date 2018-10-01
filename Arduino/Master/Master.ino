@@ -11,13 +11,23 @@ union Float {
 };
 Float angle;
 
+void serialSend (String code, int device) {
+  
+  Wire.beginTransmission(device);
+  for (i = 0; i < code.length(); i++) {
+    Wire.write(code[i]);
+  }
+  Wire.endTransmission();
+
+}
+
 void loop() {
   // Si llega algo por serial, mandar el comando 0x01 y el ángulo
   if (Serial.available() > 1) {
     angle.raw = Serial.parseFloat();
-    Wire.beginTransmission(8); // transmit to device #8
+    Wire.beginTransmission(0x11); // transmit to device #8
     Wire.write(0X01);
-    Wire.write(angle.buffer,sizeof(float));              // sends one byte
+    Wire.write(angle.buffer, sizeof(float));             // sends one byte
     Wire.endTransmission();    // stop transmitting
   }
 
