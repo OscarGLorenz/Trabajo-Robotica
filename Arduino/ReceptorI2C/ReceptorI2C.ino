@@ -34,7 +34,7 @@ float dif(float a, float b) {
   double angulo = a - b;
   if (angulo < -180.0)
     return 360.0 + angulo;
-  else if (angulo > 180.0) 
+  else if (angulo > 180.0)
     return -360.0 + angulo;
   return angulo;
 }
@@ -44,12 +44,12 @@ void setup() {
   pinMode(CSN_PIN, OUTPUT);     // Chip Select SPI
   pinMode(STEP_PIN, OUTPUT);    // Step Driver
   pinMode(DIR_PIN, OUTPUT);     // Dir Driver
-  pinMode(EN_PIN,OUTPUT);       // Enable Driver
+  pinMode(EN_PIN, OUTPUT);      // Enable Driver
 
   digitalWrite(LED_BUILTIN, HIGH); // Encender LED, inicialización
 
   // I2C
-  Wire.begin(8);                // Conectarse al bus I2C con la dirección indicada
+  Wire.begin(0x10);                // Conectarse al bus I2C con la dirección indicada
   Wire.onReceive(receiveEvent); // Callback al recibir un paquete de datos
 
   // Serial
@@ -63,7 +63,7 @@ void setup() {
   SPI.beginTransaction(settings);                       // Empezar comunicación SPI
 
   digitalWrite(LED_BUILTIN, LOW); // Apagar LED
-  
+
   digitalWrite(EN_PIN, LOW);  // Encender Driver
 }
 
@@ -73,51 +73,86 @@ union Float {
   byte buffer[sizeof(float)];
 };
 
+/* -------------------------------------------------------------------------------- */
+
 // Ahora si recibe el comando 0x01, lee un float detrás suya y actualiza la referencia
+char mode = 'D';
+int ID_action;
+int param1;
+int param2;
+
 void receiveEvent(int howMany) {
-  if (Wire.read() == 0x01) {
-    Float angle;
-    Wire.readBytes(angle.buffer, sizeof(float));
-    ref = dif(INIT, angle.raw);
+  
+  if (Wire.available() > 0) {
+
+    mode = (char)Wire.read(); // coge el primer byte del wire
+    ID_action = Wire.parseInt(); //coge el entero (ignorando el primer caracter si fuera necesario
+
+    if (ID_action == 5); //ir a home
+
+    else if (ID_action == 4) {
+      param1 = Wire.parseInt();
+      param2 = Wire.parseInt();
+
+    }
+
+    else  param1 = Wire.parseFloat();
+
+    Serial.print(mode);
+    Serial.print("");
+    Serial.print(ID_action);
+    Serial.print("");
+    Serial.print(param1);
+    Serial.println();
+
   }
 }
 
+
+/* -------------------------------------------------------------------------------- */
+
 void loop() {
+
+  if (mode == 'S')digitalWrite(LED_BUILTIN, HIGH);
+  else if (mode == 'D')digitalWrite(LED_BUILTIN, LOW);
+  delay(500);
+
+
   // Si llega algo por serial cambiar la referencia
-  if (Serial.available()) 
-    ref = dif(INIT, Serial.parseFloat());
+  /* if (Serial.available())
+     ref = dif(INIT, Serial.parseFloat());
 
-  // Calcular el error
-  float err = dif(ref, leerEncoder());
+    // Calcular el error
+    float err = dif(ref, leerEncoder());
 
-  
-  // Algoritmo todo o nada con histeresis
-  // ZM zona muerta, SLEEP tiempo zona muerta. 
-  // STEP es la velocidad, si se hace variable se puede implementar un PID
-  if (err > ZM) { // Si el error es positivo mover el motor hasta que sea 0
-    
-    do {
-      digitalWrite(DIR_PIN, LOW);
-      digitalWrite(STEP_PIN, HIGH);
-      delayMicroseconds(STEP);
-      digitalWrite(STEP_PIN, LOW);
-      delayMicroseconds(STEP);
-      err = dif(ref, leerEncoder());
-    } while (err > 0);
-    
-  } else if (err < (-ZM)) {  // Si el error es negativo mover el motor hasta que sea 0
-    
-    do {
-      digitalWrite(DIR_PIN, HIGH);
-      digitalWrite(STEP_PIN, HIGH);
-      delayMicroseconds(STEP);
-      digitalWrite(STEP_PIN, LOW);
-      delayMicroseconds(STEP);
-      err = dif(ref, leerEncoder());
-    } while (err < 0);
-    
-  }
-  
-  delay(SLEEP);
+
+    // Algoritmo todo o nada con histeresis
+    // ZM zona muerta, SLEEP tiempo zona muerta.
+    // STEP es la velocidad, si se hace variable se puede implementar un PID
+    if (err > ZM) { // Si el error es positivo mover el motor hasta que sea 0
+
+     do {
+       digitalWrite(DIR_PIN, LOW);
+       digitalWrite(STEP_PIN, HIGH);
+       delayMicroseconds(STEP);
+       digitalWrite(STEP_PIN, LOW);
+       delayMicroseconds(STEP);
+       err = dif(ref, leerEncoder());
+     } while (err > 0);
+
+    } else if (err < (-ZM)) {  // Si el error es negativo mover el motor hasta que sea 0
+
+     do {
+       digitalWrite(DIR_PIN, HIGH);
+       digitalWrite(STEP_PIN, HIGH);
+       delayMicroseconds(STEP);
+       digitalWrite(STEP_PIN, LOW);
+       delayMicroseconds(STEP);
+       err = dif(ref, leerEncoder());
+     } while (err < 0);
+
+    }
+
+    delay(SLEEP);*/
 
 }
