@@ -76,35 +76,85 @@ union Float {
 /* -------------------------------------------------------------------------------- */
 
 // Ahora si recibe el comando 0x01, lee un float detrás suya y actualiza la referencia
+String Mensaje, Mensaje2;
 char mode = 'D';
 int ID_action;
-int param1;
+float param1;
 int param2;
 
-void receiveEvent(int howMany) {
+void resetParam(){
+  mode='0';
+  ID_action=0;
+  param1=0;
+  param2=0;
   
-  if (Wire.available() > 0) {
+  }
+void process_MSG(String mensaje) {
+  
+  
+  String ID, p1, p2;
+  ID = "";
+  p1 = "";
+  p2 = "";
+  resetParam();
 
-    mode = (char)Wire.read(); // coge el primer byte del wire
-    ID_action = Wire.parseInt(); //coge el entero (ignorando el primer caracter si fuera necesario
+  //captura el modo
+  mode = mensaje[0];
+  mensaje.remove(0, 1);
+  int i = 0;
 
-    if (ID_action == 5); //ir a home
+  //captura el ID
+  while (mensaje[i] != ' ' && mensaje.length() >= i) {
+    ID += mensaje[i];
+    i++;
+  }
+  mensaje.remove(0, i + 1);
+  ID_action = ID.toInt();
 
-    else if (ID_action == 4) {
-      param1 = Wire.parseInt();
-      param2 = Wire.parseInt();
+ 
+  if (ID_action == 5); //ir a home
 
+  //si hay que capturar parámetros
+
+  else {
+    //captura el 1er parametro
+    i = 0;
+    while (mensaje[i] != ' ' && mensaje.length() >= i) {
+      p1 += mensaje[i];
+      i++;
+    }
+    mensaje.remove(0, i + 1);
+
+
+    if (ID_action == 4) {
+      param1 = p1.toInt();
+
+      //captura el parametro 2
+      //captura el 1er parametro
+      i = 0;
+      while (mensaje[i] != ' ' && mensaje.length() >= i) {
+        p2 += mensaje[i];
+        i++;
+      }
+      mensaje.remove(0, i);
+
+      param2 = p2.toInt();
+    }
+    else {
+      param1 = p1.toFloat();
     }
 
-    else  param1 = Wire.parseFloat();
+  }
+  
+}
 
-    Serial.print(mode);
-    Serial.print("");
-    Serial.print(ID_action);
-    Serial.print("");
-    Serial.print(param1);
-    Serial.println();
 
+void receiveEvent(int howMany) {
+
+  if (Wire.available() > 0) {
+    Mensaje = "";
+    for (int i = 0; i < howMany; i++)Mensaje += (char)Wire.read();
+    process_MSG(Mensaje);
   }
 }
 
@@ -113,9 +163,16 @@ void receiveEvent(int howMany) {
 
 void loop() {
 
-  if (mode == 'S')digitalWrite(LED_BUILTIN, HIGH);
-  else if (mode == 'D')digitalWrite(LED_BUILTIN, LOW);
-  delay(500);
+  Serial.print(mode);
+  Serial.print(" ");
+  Serial.print(ID_action);
+  Serial.print(" ");
+  Serial.print(param1);
+  Serial.print(" ");
+  Serial.print(param2);
+  Serial.println();
+
+  delay(50);
 
 
   // Si llega algo por serial cambiar la referencia

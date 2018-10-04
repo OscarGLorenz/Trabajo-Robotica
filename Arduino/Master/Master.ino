@@ -19,13 +19,13 @@ void setup() {
 void loop() {
   // Si llega algo por serial, mandar el comando 0x01 y el ángulo
   Wire.beginTransmission(0x10); // transmit to device #8
-  Wire.write("S1 15.3");             // sends one byte
+  Wire.write("S3 2.65 ");             // sends one byte
   Wire.endTransmission();    // stop transmitting
 
   delay(1000);
-  Wire.beginTransmission(0x10); // transmit to device #8
+  /*Wire.beginTransmission(0x10); // transmit to device #8
   Wire.write('D');             // sends one byte
   Wire.endTransmission();    // stop transmitting
   delay(1000);
-
+*/
 }
