@@ -32,20 +32,16 @@ text(mean(y)-50,mean(z)+50,"q_3 \leq 13º",'Color','b')
 l = linspace(q2lim(1),q2lim(2)*0.4,100);
 [x, y, z] = directa(0,l,l-q23lim(1));
 plot(y,z,'k'); hold on
-text(mean(y)+40,mean(z),"q_2 - q_3 \geq 30º",'Color','k')
+text(mean(y)+40,mean(z),"sqrt(y^2+z^2) \leq 589 ",'Color','k')
 
 l = linspace(q2lim(1),q2lim(2),100);
 [x, y, z] = directa(0,l,l-q23lim(2));
 plot(y,z,'k'); hold on
-text(mean(y)-250,mean(z)-10,"q_2 - q_3 \leq 158",'Color','k')
+text(mean(y)-250,mean(z)-10,"sqrt(y^2+z^2) \geq 156",'Color','k')
 
 l = linspace(0,600,100);
 plot(l,-60*ones(100,1),'Color',[0 0.5 0]); hold on
 text(mean(l),-80,"z \geq -60",'Color',[0 0.5 0 ])
-
-l = linspace(-200,200,100);
-plot(zeros(100,1),l,'Color',[0 0.5 0]); hold on
-text(0,220,"y \geq 0",'Color',[0 0.5 0 ])
 
 l = linspace(-pi/6,pi/2,100);
 plot(600*cos(l),600*sin(l),'Color','m'); hold on
@@ -54,6 +50,10 @@ text(200,400,"Singularidad",'Color','m');
 plot(0,0,'*m');
 text(-100,50,"Singularidad",'Color','m');
 
+plot(182.1414,   -60.0000,'ob');
+l = linspace(0,2,30);
+[x, y, z] = directa(0,l,-pi/2);
+plot(y,z,'.k'); hold on
 
 axis equal
 grid on
@@ -81,20 +81,15 @@ text(0,q3lim(2),"q_3 \leq 13",'Color','b')
 
 l = linspace(q2lim(1),q3lim(2)+q23lim(1),100);
 plot(l,l-q23lim(1),'Color','k'); hold on
-text(mean(l),mean(l-q23lim(1)),"q_2 - q_3 \geq 30º",'Color','k')
+text(mean(l),mean(l-q23lim(1)),"sqrt(y^2+z^2) \leq 589mm",'Color','k')
 l = linspace(q3lim(1),q2lim(2)-q23lim(2),100);
 plot(l+q23lim(2),l,'Color','k'); hold on
-text(mean(l+q23lim(2)),mean(l),"q_2 - q_3 \leq 158",'Color','k')
+text(mean(l+q23lim(2)),mean(l),"sqrt(y^2+z^2) \geq 156mm",'Color','k')
 
-l = linspace(-500,500,100);
+l = linspace(80,590,100);
 [q1,q2,q3] = inversa(zeros(1,100),l,ones(1,100).*-60);
 plot(q2,q3,'Color',[0 0.5 0 ]); hold on
 text(mean(q2),mean(q3),"z \geq - 60",'Color',[0 0.5 0]);
-
-l = linspace(-1,1.001,100);
-[q1,q2,q3] = inversa(zeros(1,100),zeros(1,100),l);
-plot(q2,q3,'Color',[0 0.5 0]); hold on
-text(mean(q2),mean(q3),"y \geq 0",'Color',[0 0.5 0]);
 
 l = linspace(0,2.5,100);
 plot(l,l-pi,'Color','m'); hold on
@@ -102,6 +97,11 @@ text(mean(l),mean(l)-pi,"Singularidad",'Color','m');
 l = linspace(0,0.5,100);
 plot(l,l,'Color','m'); hold on
 text(mean(l),mean(l)+0.5,"Singularidad",'Color','m');
+
+plot(0.927253158779707, -1.56369191311430,'ob');
+
+
+
 
 
 axis equal
