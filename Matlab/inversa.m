@@ -17,7 +17,9 @@ cosG = (l1^2 + l2^2 - y.^2 - z.^2) ./ (2 * l1 * l2);
 % Eje lineal
 q1 = x;
 % Angulo del primer motor
-q2 = asin(l2 ./ sqrt(y.^2 + z.^2) .* sqrt(1 - cosG .* cosG)) + atan(z./y);
+q2 = atan2(l2 .* sqrt(1 - cosG .* cosG) , sqrt(y.^2 + z.^2 - l2^2 .* (1 - cosG .* cosG))) + atan2(z,y);
 % Angulo del segundo motor
-q3 = asin((z - l1 * sin(q2) ) ./ l2);
+weirdZone = ( y.^ 2 +  (z+l2).^ 2 ) >= l1^2;
+sign = 2*weirdZone - 1;
+q3 = atan2(z - l1 * sin(q2), sign.*sqrt(l2^2 - (z - l1 * sin(q2) ).^2));
 end

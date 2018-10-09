@@ -50,18 +50,14 @@ text(200,400,"Singularidad",'Color','m');
 plot(0,0,'*m');
 text(-100,50,"Singularidad",'Color','m');
 
-plot(182.1414,   -60.0000,'ob');
-l = linspace(0,2,30);
-[x, y, z] = directa(0,l,-pi/2);
-plot(y,z,'.k'); hold on
 
 axis equal
 grid on
 xlabel('Y(mm)')
 ylabel('Z(mm)')
 
-A = Montecarlo(@(x) constrains(x),3,1e5,[-600 600]) / 10^3;
-disp("El volumen de trabajo tiene " + num2str(A) + " cm^3");
+%A = Montecarlo(@(x) constrains(x),3,1e5,[-600 600]) / 10^3;
+%disp("El volumen de trabajo tiene " + num2str(A) + " cm^3");
 
 figure
 ax = axes('XLim',[0 pi],'YLim',[-pi pi]);
@@ -86,7 +82,7 @@ l = linspace(q3lim(1),q2lim(2)-q23lim(2),100);
 plot(l+q23lim(2),l,'Color','k'); hold on
 text(mean(l+q23lim(2)),mean(l),"sqrt(y^2+z^2) \geq 156mm",'Color','k')
 
-l = linspace(80,590,100);
+l = linspace(20,590,100);
 [q1,q2,q3] = inversa(zeros(1,100),l,ones(1,100).*-60);
 plot(q2,q3,'Color',[0 0.5 0 ]); hold on
 text(mean(q2),mean(q3),"z \geq - 60",'Color',[0 0.5 0]);
@@ -97,12 +93,6 @@ text(mean(l),mean(l)-pi,"Singularidad",'Color','m');
 l = linspace(0,0.5,100);
 plot(l,l,'Color','m'); hold on
 text(mean(l),mean(l)+0.5,"Singularidad",'Color','m');
-
-plot(0.927253158779707, -1.56369191311430,'ob');
-
-
-
-
 
 axis equal
 grid on
