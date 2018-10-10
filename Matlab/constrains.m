@@ -10,7 +10,7 @@ function inside = constrains(x)
 
 q2lim = deg2rad([6, 115]);  % 6 <= q2 <= 115
 q3lim = deg2rad([-116,13]); % -116 <= q3 <= 13
-q23lim = deg2rad([30, 158]);      % 30 <= q2-q3 <=158
+rlim = [156, 589];      % 30 <= q2-q3 <=158
 q1lim = [0, 250];  % 0 <= q1 <= 250
 zlim = -60;
 ylim = 0;
@@ -23,7 +23,7 @@ elseif q(2) < q2lim(1) || q(2) > q2lim(2)
     inside = 0;
 elseif q(3) < q3lim(1) || q(3) > q3lim(2)
     inside = 0;
-elseif (q(2)-q(3)) < q23lim(1) || (q(2)-q(3)) > q23lim(2) || norm([x(2) x(3)]) < 114.50
+elseif norm([x(2) x(3)]) < rlim(1) || norm([x(2) x(3)]) > rlim(2)
     inside = 0;
 elseif q(1) < q1lim(1) || q(1) > q1lim(2)
     inside = 0;

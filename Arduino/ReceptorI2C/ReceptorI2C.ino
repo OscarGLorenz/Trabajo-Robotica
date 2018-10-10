@@ -13,6 +13,10 @@
 #define SLEEP 10   // Espera entre movimientos
 #define STEP 100     // Ancho del pulso para el stepper
 
+#define SPEED_X 5000
+
+double posX, theta1, theta2;
+
 double ref = INIT;
 
 float leerEncoder()  {
@@ -49,7 +53,7 @@ void setup() {
   digitalWrite(LED_BUILTIN, HIGH); // Encender LED, inicialización
 
   // I2C
-  Wire.begin(0x10);                // Conectarse al bus I2C con la dirección indicada
+  Wire.begin(0x11);                // Conectarse al bus I2C con la dirección indicada
   Wire.onReceive(receiveEvent); // Callback al recibir un paquete de datos
 
   // Serial
@@ -77,21 +81,21 @@ union Float {
 
 // Ahora si recibe el comando 0x01, lee un float detrás suya y actualiza la referencia
 String Mensaje, Mensaje2;
-char mode = 'D';
+char mode = 'J';
 int ID_action;
 float param1;
 int param2;
 
-void resetParam(){
-  mode='0';
-  ID_action=0;
-  param1=0;
-  param2=0;
-  
-  }
+void resetParam() {
+  mode = '0';
+  ID_action = 0;
+  param1 = 0;
+  param2 = 0;
+
+}
 void process_MSG(String mensaje) {
-  
-  
+
+
   String ID, p1, p2;
   ID = "";
   p1 = "";
@@ -111,7 +115,7 @@ void process_MSG(String mensaje) {
   mensaje.remove(0, i + 1);
   ID_action = ID.toInt();
 
- 
+
   if (ID_action == 5); //ir a home
 
   //si hay que capturar parámetros
@@ -145,7 +149,7 @@ void process_MSG(String mensaje) {
     }
 
   }
-  
+
 }
 
 
@@ -161,55 +165,98 @@ void receiveEvent(int howMany) {
 
 /* -------------------------------------------------------------------------------- */
 
+
+void move_X_to(long int positionX, float speedScrew) {
+
+  long int nstep, n;
+  float dly;
+  float  distance = positionX - posX;
+  
+  nstep = 1;
+  
+  if (distance > 0) {
+    posX +=(double) nstep *0.04;
+  }
+  else if(distance<0) {
+    posX -=(double) nstep*0.04;
+  }
+
+  
+  //una vuelta son 200 pasos y avanza 8 mm
+  
+  
+  if (speedScrew == 0 || distance == 0) nstep = 0;
+
+  // tengo que calcular la velocidad lineal ahora tengo velocidad angular
+  dly = fabs((1.0 / (speedScrew / 60.0 * 200.0 ) / 2.0) * 1e6);
+  n = 0;
+  
+  while (n <= nstep) {
+
+    if (distance > 0) {
+
+      digitalWrite(DIR_PIN, HIGH);
+      digitalWrite(STEP_PIN, HIGH);
+      delayMicroseconds(dly);
+      digitalWrite(STEP_PIN, LOW);
+      delayMicroseconds(dly);
+
+    } else {
+
+      digitalWrite(DIR_PIN, LOW);
+      digitalWrite(STEP_PIN, HIGH);
+      delayMicroseconds(dly);
+      digitalWrite(STEP_PIN, LOW);
+      delayMicroseconds(dly);
+    }
+    n++;
+  }
+  
+  
+}
+
+void action(int ID_action, float param1, int param2) {
+  switch (ID_action) {
+    case 0: move_X_to(0, SPEED_X); break;
+    case 1: break;
+    case 2: break;
+    case 3: move_X_to(param1, SPEED_X); break;
+    case 4: break;
+
+    case 10: break;
+    case 11: break;
+    case 12: break;
+    case 14: break;
+
+
+    case 20: break;
+
+
+      //case 30: break;
+
+
+  }
+
+}
+
 void loop() {
 
-  Serial.print(mode);
-  Serial.print(" ");
+ 
   Serial.print(ID_action);
   Serial.print(" ");
   Serial.print(param1);
-  Serial.print(" ");
-  Serial.print(param2);
+  
+  Serial.print(" posX= ");
+  Serial.print(posX);
   Serial.println();
 
-  delay(50);
-
-
   // Si llega algo por serial cambiar la referencia
-  /* if (Serial.available())
-     ref = dif(INIT, Serial.parseFloat());
+  if (ID_action == 30){
+    posX = 0;
+    Serial.println("HOME");
+  }
+  else action(ID_action, param1, param2);
 
-    // Calcular el error
-    float err = dif(ref, leerEncoder());
 
-
-    // Algoritmo todo o nada con histeresis
-    // ZM zona muerta, SLEEP tiempo zona muerta.
-    // STEP es la velocidad, si se hace variable se puede implementar un PID
-    if (err > ZM) { // Si el error es positivo mover el motor hasta que sea 0
-
-     do {
-       digitalWrite(DIR_PIN, LOW);
-       digitalWrite(STEP_PIN, HIGH);
-       delayMicroseconds(STEP);
-       digitalWrite(STEP_PIN, LOW);
-       delayMicroseconds(STEP);
-       err = dif(ref, leerEncoder());
-     } while (err > 0);
-
-    } else if (err < (-ZM)) {  // Si el error es negativo mover el motor hasta que sea 0
-
-     do {
-       digitalWrite(DIR_PIN, HIGH);
-       digitalWrite(STEP_PIN, HIGH);
-       delayMicroseconds(STEP);
-       digitalWrite(STEP_PIN, LOW);
-       delayMicroseconds(STEP);
-       err = dif(ref, leerEncoder());
-     } while (err < 0);
-
-    }
-
-    delay(SLEEP);*/
 
 }
