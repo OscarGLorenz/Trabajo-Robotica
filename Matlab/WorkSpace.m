@@ -11,6 +11,27 @@ hold(ax,'on');
 % grid on
 % close all
 
+n = 400;
+Y = linspace(-600,600,n);
+Z = linspace(-600,600,n);
+C = zeros(n,n);
+for i=1:n
+    for j=1:n
+        if (sqrt(Y(i)^2+Z(j)^2) >= 600)
+            C(i,j) = 0;
+        else
+            [Q1,Q2,Q3] = inversa(0,Y(i),Z(j));
+
+            C(i,j) = log(norm(inv([-sin(Q2) -sin(Q3); cos(Q2) cos(Q3)])));
+        end
+
+    end
+end
+contourf(Y,Z,C,30);
+colormap(flip(hot))
+
+title('$\left\Vert\left(\frac{\partial (q_1,q_2,q_3) \circ f^{-1} (x,y,z)}{\partial (x,y,z)}\right)^{-1}\right\Vert_2$','Interpreter','latex','FontSize',20);
+
 l = linspace(q2lim(1),q2lim(2),100);
 [x, y, z] = directa(0,l,q3lim(1));
 plot(y,z,'r'); hold on
@@ -31,25 +52,24 @@ text(mean(y)-50,mean(z)+50,"q_3 \leq 13º",'Color','b')
 
 l = linspace(q2lim(1),q2lim(2)*0.4,100);
 [x, y, z] = directa(0,l,l-q23lim(1));
-plot(y,z,'k'); hold on
-text(mean(y)+40,mean(z),"sqrt(y^2+z^2) \leq 589 ",'Color','k')
+plot(y,z,'g'); hold on
+text(mean(y)+40,mean(z),"sqrt(y^2+z^2) \leq 589 ",'Color','g')
 
 l = linspace(q2lim(1),q2lim(2),100);
 [x, y, z] = directa(0,l,l-q23lim(2));
-plot(y,z,'k'); hold on
-text(mean(y)-250,mean(z)-10,"sqrt(y^2+z^2) \geq 156",'Color','k')
+plot(y,z,'g'); hold on
+text(mean(y)-250,mean(z)-10,"sqrt(y^2+z^2) \geq 156",'Color','g')
 
 l = linspace(0,600,100);
 plot(l,-60*ones(100,1),'Color',[0 0.5 0]); hold on
 text(mean(l),-80,"z \geq -60",'Color',[0 0.5 0 ])
 
 l = linspace(-pi/6,pi/2,100);
-plot(600*cos(l),600*sin(l),'Color','m'); hold on
-text(200,400,"Singularidad",'Color','m');
+plot(600*cos(l),600*sin(l),'Color','c'); hold on
+text(200,400,"Singularidad",'Color','c');
 
-plot(0,0,'*m');
-text(-100,50,"Singularidad",'Color','m');
-
+plot(0,0,'*c');
+text(-100,50,"Singularidad",'Color','c');
 
 axis equal
 grid on
@@ -62,7 +82,16 @@ ylabel('Z(mm)')
 figure
 ax = axes('XLim',[0 pi],'YLim',[-pi pi]);
 hold(ax,'on');
-
+Q2 = linspace(0.1,2,100);
+Q3 = linspace(-2,0.23,100);
+C = zeros(100,100);
+for i=1:100
+    for j=1:100
+        C(i,j) = log(norm(inv([-sin(Q2(i)) -sin(Q3(j)); cos(Q2(i)) cos(Q3(j))])));
+    end
+end
+contourf(Q2,Q3,C);
+colormap(flip(hot))
 l = linspace(q3lim(1),q3lim(2),100);
 plot(q2lim(1)*ones(100,1),l,'Color','r'); hold on
 text(q2lim(1),0,"q_2 \geq 6º",'Color','r')
@@ -93,6 +122,9 @@ text(mean(l),mean(l)-pi,"Singularidad",'Color','m');
 l = linspace(0,0.5,100);
 plot(l,l,'Color','m'); hold on
 text(mean(l),mean(l)+0.5,"Singularidad",'Color','m');
+
+
+
 
 axis equal
 grid on

@@ -1,16 +1,16 @@
 close all
 
 %% Ecuación paramétrica de una curva 3D
-X = @(t) 150/sqrt(2)*cosd(4*t)+120;
-Y = @(t) 150*sind(4*t)+250;
-Z = @(t) 150/sqrt(2)*cosd(4*t)+50;
+X = @(t) 100*cosd(4*t)+120;
+Y = @(t) 200;
+Z = @(t) 100*sind(4*t);
 
 %Posición inicial
 x = X(0); y = Y(0); z = Z(0);
 
 %% Configuraciones de gráfica 3D
 % Tamaño del gráfico
-ax = axes('XLim',[-5 300],'YLim',[-150 500],'ZLim',[-100 500]);
+ax = axes('XLim',[-5 300],'YLim',[-150 500],'ZLim',[-200 500]);
 % Mantener ejes
 hold(ax,'on');
 % Isómetrica
