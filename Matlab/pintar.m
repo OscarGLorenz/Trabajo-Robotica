@@ -1,5 +1,9 @@
 function pintar(q1,q2,q3)
 
+quiver3(0,0,0,100,0,0,'r','LineWidth',1,'MaxHeadSize',4);
+quiver3(0,0,0,0,100,0,'g','LineWidth',1,'MaxHeadSize',4);
+quiver3(0,0,0,0,0,100,'b','LineWidth',1,'MaxHeadSize',4);
+
 % Borrar grafica anterior
 hold off
 
@@ -34,5 +38,11 @@ y(i) = y2;
 z(i) = z2;
 i = i + 1;
 
-plot3(x2, y2, z2);
+plot3(x, y, z,'r');
+axis equal
+
+quiver3(0,0,0,100,0,0,'r','LineWidth',1,'MaxHeadSize',4);
+quiver3(0,0,0,0,100,0,'g','LineWidth',1,'MaxHeadSize',4);
+quiver3(0,0,0,0,0,100,'b','LineWidth',1,'MaxHeadSize',4);
+
 end
