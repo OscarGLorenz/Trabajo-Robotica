@@ -103,13 +103,16 @@ String Mensaje;
 char mode; int ID_action; float param1; int param2;
 
 void resetParam() {
+  
   mode = '0';
   ID_action = 0;
   param1 = 0;
   param2 = 0;
+
 }
 
 void process_MSG(String mensaje) {
+  
   String ID, p1, p2;
   ID = "";
   p1 = "";
@@ -126,6 +129,7 @@ void process_MSG(String mensaje) {
     ID += mensaje[i];
     i++;
   }
+  
   mensaje.remove(0, i + 1);
   ID_action = ID.toInt();
 
