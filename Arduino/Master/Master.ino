@@ -1,3 +1,4 @@
+//Unión Serial.ino con Master.ino, actualización de funciones
 #include <Wire.h>
 #include "Sim.h"
 #include "Debug.h"
@@ -41,7 +42,7 @@ void SerialSend (String code, int device) {
 //Para recibir la posicion con REQUEST, el maestro ahora es esclavo y el esclavo es maestro
 /*
   void SerialReceive (int device) {
-  char pos[Wire.available()];
+  char pos[30]; //Numero mayor que Wire.available()
   int i=0;
   while (1 < Wire.available()) {
     pos[i] = Wire.read();
@@ -148,6 +149,4 @@ SIGNAL(TIMER0_COMPA_vect) {
   q1.update();
   q2.update();
   q3.update();
-
-}
 }
