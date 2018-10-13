@@ -1,17 +1,19 @@
 #include "Sim.h"
 #include "Debug.h"
+NonDynamicSystem q1(20,0);
+NonDynamicSystem q2(2,M_PI_4);
+NonDynamicSystem q3(2,-M_PI_4);
+
+
 void setup() {
   Serial.begin(9600);
   Serial.setTimeout(10);
     OCR0A = 0xAF;
   TIMSK0 |= _BV(OCIE0A);
-  
+
 }
 
 
-NonDynamicSystem q1(20);
-NonDynamicSystem q2(2);
-NonDynamicSystem q3(2);
 
 void loop() {
   if (Serial.available() > 0) {
