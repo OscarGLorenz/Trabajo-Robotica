@@ -1,13 +1,17 @@
 #include "Sim.h"
 #include "Debug.h"
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial.setTimeout(10);
+    OCR0A = 0xAF;
+  TIMSK0 |= _BV(OCIE0A);
+  
 }
 
-NonDynamicSystem q1(40);
-NonDynamicSystem q2(5);
-NonDynamicSystem q3(5);
+
+NonDynamicSystem q1(20);
+NonDynamicSystem q2(2);
+NonDynamicSystem q3(2);
 
 void loop() {
   if (Serial.available() > 0) {
@@ -19,13 +23,10 @@ void loop() {
       int cmd = Serial.parseInt();
       switch (cmd) {
         case 0:
-          q1.goPos(0);
-          q2.goPos(0);
-          q3.goPos(0);
           break;
 
         case 1:
-          Serial.read(); Serial.read(); // Eliminar " M" del buffer
+         Serial.read();  Serial.read();// Eliminar " M" del buffer
           motor = Serial.parseInt();
           q = Serial.parseFloat();
           if (motor == 1) {
@@ -39,7 +40,7 @@ void loop() {
           break;
 
         case 2:
-          Serial.read(); Serial.read(); // Eliminar " M" del buffer
+          Serial.read(); Serial.read();  // Eliminar " M" del buffer
           motor = Serial.parseInt();
           q = Serial.parseFloat();
           if (motor == 1) {
@@ -64,10 +65,17 @@ void loop() {
           } else if (motor == 3) {
             q = q3.evaluate();
           }
-          Serial.println("D1 M" + String(motor) + " " + String(q));
-
+          char s[30];
+          Serial.print("D1 M"); Serial.print(motor); Serial.print(" "); Serial.println(dtostrf(q, 3, 3, s));
+          
           break;
       }
     }
   }
+}
+
+SIGNAL(TIMER0_COMPA_vect) {
+            q1.update();
+            q2.update();
+            q3.update();
 }
