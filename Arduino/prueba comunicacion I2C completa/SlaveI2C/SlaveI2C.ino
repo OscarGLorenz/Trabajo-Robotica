@@ -15,11 +15,40 @@
 #define STEP 100     // Ancho del pulso para el stepper
 
 #define SPEED_X 5000
+#define REF_HOME -50
 
-double posX, theta1, theta2;
-double ref = INIT;
 
-void Initialize(){
+
+/* DECLARACION DE VARIABLES GLOBALES*/
+
+// Variables del mensaje
+
+String MSG;
+char Type;
+int ID_action;
+float param1;
+int param2;
+
+// variable de estado
+
+int done;
+double posX;  //theta1 o theta 2
+double posX_ref;  //theta1_ref, theta2_ref;
+
+// parametros
+float K[3];
+float Vmax, Amax, A2max;
+float DeadZone ;
+
+// Tipo de dato para almacenar un float y poder acceder a sus bytes de forma cómoda
+union Float {
+  float raw;
+  byte buffer[sizeof(float)];
+};
+
+
+
+void Initialize() {
   pinMode(LED_BUILTIN, OUTPUT); // LED
   pinMode(CSN_PIN, OUTPUT);     // Chip Select SPI
   pinMode(STEP_PIN, OUTPUT);    // Step Driver
@@ -30,7 +59,10 @@ void Initialize(){
 
   // I2C
   Wire.begin(0x11);                // Conectarse al bus I2C con la dirección indicada
-  Wire.onReceive(receiveEvent); // Callback al recibir un paquete de datos
+  // Callback al recibir un paquete de datos
+  Wire.onReceive(receiveEvent);
+  // Callback del request
+  Wire.onRequest(requestEvent);
 
   // Serial
   Serial.begin(115200);         // Comunicación Serial a 115200 Baudios
@@ -46,8 +78,8 @@ void Initialize(){
 
   digitalWrite(EN_PIN, LOW);  // Encender Driver
 
-  
-  
+
+
 }
 
 void sendStep(int delay_step, short int dir) {
@@ -76,8 +108,11 @@ float leerEncoder()  {
 }
 
 // Diferencia entre ángulos (-180<phi<=180)
+
 float dif(float a, float b) {
+
   double angulo = a - b;
+
   if (angulo < -180.0)
     return 360.0 + angulo;
   else if (angulo > 180.0)
@@ -87,24 +122,17 @@ float dif(float a, float b) {
 
 void setup() {
   Initialize();
-  }
+}
 
-// Tipo de dato para almacenar un float y poder acceder a sus bytes de forma cómoda
-union Float {
-  float raw;
-  byte buffer[sizeof(float)];
-};
+
 
 /* -------------------------------------------------------------------------------- */
 
 // Ahora si recibe el comando 0x01, lee un float detrás suya y actualiza la referencia
 
-String Mensaje;
-char mode; int ID_action; float param1; int param2;
-
 void resetParam() {
-  
-  mode = '0';
+
+  Type = '0';
   ID_action = 0;
   param1 = 0;
   param2 = 0;
@@ -112,7 +140,7 @@ void resetParam() {
 }
 
 void process_MSG(String mensaje) {
-  
+
   String ID, p1, p2;
   ID = "";
   p1 = "";
@@ -129,7 +157,7 @@ void process_MSG(String mensaje) {
     ID += mensaje[i];
     i++;
   }
-  
+
   mensaje.remove(0, i + 1);
   ID_action = ID.toInt();
 
@@ -174,12 +202,36 @@ void process_MSG(String mensaje) {
 void receiveEvent(int howMany) {
 
   if (Wire.available() > 0) {
-    Mensaje = "";
-    for (int i = 0; i < howMany; i++)Mensaje += (char)Wire.read();
-    process_MSG(Mensaje);
+    MSG = "";
+    for (int i = 0; i < howMany; i++)MSG += (char)Wire.read();
+    process_MSG(MSG);
+    done = 0;
   }
 }
 
+void requestEvent() {
+
+  if (Type == 'R') {
+    if (ID_action == 20)Wire.write(posX);
+  }
+  else {
+    switch (ID_action) {
+      case 0: {
+          //Caso HOME
+          if (abs(posX - posX_ref) < DeadZone) done = 1;
+          break;
+        }
+      case 2: {
+          break;
+        }
+      case 3: {
+          break;
+        }
+    }
+    Wire.write(done);
+  }
+
+}
 
 /* -------------------------------------------------------------------------------- */
 
@@ -221,10 +273,10 @@ void move_X_to(long int positionX, float speedScrew) {
 void action(int ID_action, float param1, int param2) {
   switch (ID_action) {
 
-    case 0: move_X_to(0, SPEED_X); break;
+    case 0: posX_ref=REF_HOME; break;
     case 1: break;
     case 2: break;
-    case 3: move_X_to(param1, SPEED_X); break;
+    case 3: posX_ref=param1; break;
     case 4: break;
 
     case 10: break;
@@ -236,27 +288,26 @@ void action(int ID_action, float param1, int param2) {
 
       //case 30: break;
 
-
   }
+}
 
+// antes de cada vuelta del loop se realizan los callbacks del wire.
+
+void control_loop() {
+  if (abs(posX - posX_ref) < DeadZone)) {
+    move_X_to(posX_ref, SPEED_X);
+  }
 }
 
 void loop() {
-
-  Serial.print(ID_action);
-  Serial.print(" ");
-  Serial.print(param1);
-
-  Serial.print(" posX= ");
-  Serial.print(posX);
-  Serial.println();
-
+  
   // Si llega algo por serial cambiar la referencia
   if (ID_action == 30) {
     posX = 0;
     Serial.println("HOME");
   }
+
   else action(ID_action, param1, param2);
-
-
+  
+  control_loop();
 }
