@@ -98,7 +98,7 @@ void loop() {
   angleRead.raw = leerEncoder();
   t1=millis();  
   V1=(angleRead-angle0)/(t1-t0);
-  V1=V0+kf*(V1);
+  V1=V0+kf*(V1-V0);
   
   
   V0=V1;
