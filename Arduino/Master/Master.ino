@@ -32,7 +32,7 @@ void setup() {
   initialize();
 }
 
-void SerialSend (String code, int device) {
+void WireSend (String code, int device) {
   Wire.beginTransmission(device);
   for (int i = 0; i < code.length(); i++)Wire.write(code[i]);
   delayMicroseconds(10);
@@ -40,19 +40,24 @@ void SerialSend (String code, int device) {
 }
 
 //Para recibir la posicion con REQUEST, el maestro ahora es esclavo y el esclavo es maestro
+
 /*
   void SerialReceive (int device) {
   char pos[30]; //Numero mayor que Wire.available()
   int i=0;
-  while (1 < Wire.available()) {
+  while (1<=Wire.available()) {
     pos[i] = Wire.read();
     i++;
   }
   pos[i+1]="\0"
   return pos;
 */
+
+
 void loop() {
-  if (analogRead(ENDSTOP_PIN) < 150)SerialSend(STOP, M1_address);
+
+  if (analogRead(ENDSTOP_PIN) < 150) WireSend(STOP, M1_address);
+
   else if (Serial.available() > 0) {
     char jcode = Serial.read();
     int motor;
@@ -63,11 +68,11 @@ void loop() {
         case 0:
           motor = Serial.parseInt();
           if (motor == 1) {
-            SerialSend(HOME, M1_address);
+            WireSend(HOME, M1_address);
           } else if (motor == 2) {
-            SerialSend(HOME, M2_address);
+            WireSend(HOME, M2_address);
           } else if (motor == 3) {
-            SerialSend(HOME, M3_address);
+            WireSend(HOME, M3_address);
           }
           break;
 
@@ -77,16 +82,16 @@ void loop() {
           q = Serial.parseFloat();
           if (motor == 1) {
             q1.goPos(q);
-            //SerialSend(ANGLE, M1_address);
-            //SerialSend(q, M1_address);
+            //WireSend(ANGLE, M1_address);
+            //WireSend(q, M1_address);
           } else if (motor == 2) {
             q2.goPos(q);
-            //SerialSend(ANGLE, M2_address);
-            //SerialSend(q, M2_address);
+            //WireSend(ANGLE, M2_address);
+            //WireSend(q, M2_address);
           } else if (motor == 3) {
             q3.goPos(q);
-            //SerialSend(ANGLE, M3_address);
-            //SerialSend(q, M3_address);
+            //WireSend(ANGLE, M3_address);
+            //WireSend(q, M3_address);
           }
           break;
 
@@ -96,16 +101,16 @@ void loop() {
           q = Serial.parseFloat();
           if (motor == 1) {
             q1.speed(q);
-            //SerialSend(VEL, M1_address);
-            //SerialSend(q, M1_address);
+            //WireSend(VEL, M1_address);
+            //WireSend(q, M1_address);
           } else if (motor == 2) {
             q2.speed(q);
-            //SerialSend(VEL, M2_address);
-            //SerialSend(q, M2_address);
+            //WireSend(VEL, M2_address);
+            //WireSend(q, M2_address);
           } else if (motor == 3) {
             q3.speed(q);
-            //SerialSend(VEL, M3_address);
-            //SerialSend(q, M3_address);
+            //WireSend(VEL, M3_address);
+            //WireSend(q, M3_address);
           }
           break;
 
@@ -113,11 +118,11 @@ void loop() {
           Serial.read(); Serial.read();  // Eliminar " M" del buffer
           motor = Serial.parseInt();
           if (motor == 1) {
-            SerialSend(DISABLE, M1_address);
+            WireSend(DISABLE, M1_address);
           } else if (motor == 2) {
-            SerialSend(DISABLE, M2_address);
+            WireSend(DISABLE, M2_address);
           } else if (motor == 3) {
-            SerialSend(DISABLE, M3_address);
+            WireSend(DISABLE, M3_address);
           }
           break;
         case 20:
@@ -126,15 +131,15 @@ void loop() {
           //Serial.print("D1 M"); Serial.print(motor); Serial.print(" ");
           if (motor == 1) {
             q = q1.evaluate();
-            //SerialSend(REQUEST, M1_address);
+            //WireSend(REQUEST, M1_address);
             //Serial.println(SerialReceive(M1_address));
           } else if (motor == 2) {
             q = q2.evaluate();
-            //SerialSend(REQUEST, M2_address);
+            //WireSend(REQUEST, M2_address);
             //Serial.println(SerialReceive(M1_address));
           } else if (motor == 3) {
             q = q3.evaluate();
-            //SerialSend(REQUEST, M3_address);
+            //WireSend(REQUEST, M3_address);
             //Serial.println(SerialReceive(M1_address));
           }
           char s[30];
@@ -149,4 +154,8 @@ SIGNAL(TIMER0_COMPA_vect) {
   q1.update();
   q2.update();
   q3.update();
+
 }
+}
+
+}
