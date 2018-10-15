@@ -14,7 +14,7 @@
 #define SLEEP 10   // Espera entre movimientos
 #define STEP 100     // Ancho del pulso para el stepper
 
-#define SPEED_X 5000
+#define SPEED_X 40
 #define REF_HOME -50
 
 
@@ -31,14 +31,14 @@ int param2;
 
 // variable de estado
 
-int done;
+byte done;
 double posX;  //theta1 o theta 2
 double posX_ref;  //theta1_ref, theta2_ref;
 
 // parametros
 float K[3];
 float Vmax, Amax, A2max;
-float DeadZone ;
+float DeadZone=0.4 ;
 
 // Tipo de dato para almacenar un float y poder acceder a sus bytes de forma cómoda
 union Float {
@@ -148,7 +148,7 @@ void process_MSG(String mensaje) {
   resetParam();
 
   //captura el modo
-  mode = mensaje[0];
+  Type = mensaje[0];
   mensaje.remove(0, 1);
   int i = 0;
 
@@ -212,13 +212,16 @@ void receiveEvent(int howMany) {
 void requestEvent() {
 
   if (Type == 'R') {
-    if (ID_action == 20)Wire.write(posX);
+    if (ID_action == 20)
+      Wire.write((byte)posX);
+      delay(10);
+      done=1;
   }
   else {
     switch (ID_action) {
       case 0: {
           //Caso HOME
-          if (abs(posX - posX_ref) < DeadZone) done = 1;
+          if (abs(posX - posX_ref) <= DeadZone) done = 1;
           break;
         }
       case 2: {
@@ -228,8 +231,10 @@ void requestEvent() {
           break;
         }
     }
-    Wire.write(done);
+    
+   
   }
+   Wire.write(done);
 
 }
 
@@ -241,13 +246,13 @@ void move_X_to(long int positionX, float speedScrew) {
   long int nstep, n;
   float dly;
   float  distance = positionX - posX;
-
+  
   nstep = 1;
 
   if (distance > 0) {
     posX += (double) nstep * 0.04;
   }
-  else if (distance < 0) {
+  else{
     posX -= (double) nstep * 0.04;
   }
 
@@ -273,10 +278,10 @@ void move_X_to(long int positionX, float speedScrew) {
 void action(int ID_action, float param1, int param2) {
   switch (ID_action) {
 
-    case 0: posX_ref=REF_HOME; break;
+    case 0: posX_ref = REF_HOME; break;
     case 1: break;
     case 2: break;
-    case 3: posX_ref=param1; break;
+    case 3: posX_ref = param1; break;
     case 4: break;
 
     case 10: break;
@@ -292,22 +297,42 @@ void action(int ID_action, float param1, int param2) {
 }
 
 // antes de cada vuelta del loop se realizan los callbacks del wire.
+void printData() {
+  Serial.print("ID= ");
+  Serial.print(ID_action);
+  Serial.print(" param1= ");
+  Serial.print(param1);
+  Serial.print(" posX= ");
+  Serial.print(posX);
+  Serial.print(" posX_ref = ");
+  Serial.print(posX_ref);
+  Serial.print(" done= ");
+  Serial.print(done);
+  Serial.println();
+}
 
-void control_loop() {
-  if (abs(posX - posX_ref) < DeadZone)) {
+void control_loop() {  
+  if (abs(posX - posX_ref) >= DeadZone) {
     move_X_to(posX_ref, SPEED_X);
   }
+ // printData();
 }
 
 void loop() {
-  
+
   // Si llega algo por serial cambiar la referencia
   if (ID_action == 30) {
     posX = 0;
+    posX_ref = 0;
+    delay(1);
+    
+    done=1;
     Serial.println("HOME");
   }
 
-  else action(ID_action, param1, param2);
-  
+  else {
+    action(ID_action, param1, param2);
+  }
+
   control_loop();
 }
