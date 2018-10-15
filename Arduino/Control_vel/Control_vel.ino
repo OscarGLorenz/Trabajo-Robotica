@@ -33,13 +33,14 @@ float leerEncoder()  {
 // Diferencia entre ángulos (-180<phi<=180)
 float difAngle(float a, float b) {
   double angulo = a - b;
-  //zona muerta 
-  if(abs(angulo)<1) return 0;
-  else if (angulo < -180.0)
-    return 360.0 + angulo;
+  double aux;
+  //zona muerta
+  if (angulo < -180.0)
+    aux=360.0 + angulo;
   else if (angulo > 180.0)
-    return -360.0 + angulo;
-  return angulo;
+    aux =-360.0 + angulo;
+  //if (aux<0.5) aux=0;
+  return aux;
 }
 
 
@@ -73,11 +74,12 @@ unsigned long dly = 0;
 Float speed, angleRef, angleRead;
 
 
-float error,Kp,Kf,PID;
-
+float error,Kp,Kf,PID,t1;
+float t0=0;
 float V0 =0;
 float V1=0;
 float angle0=0;
+float angle1=0;
 
 float SpeedRef;
 void loop() {
@@ -89,38 +91,43 @@ void loop() {
   Serial.write(angleRead.buffer, sizeof(angleRead)); // Enviar a simulink la distancia captada
   */
 
-  SpeedRef=100;
+  SpeedRef=-200;
   
-  Kp=5;
-  Kf=0.2;
-  
-  
+  Kp=1;
+  Kf=0.001;
   angleRead.raw = leerEncoder();
   t1=millis();  
-  V1=(angleRead-angle0)/(t1-t0);
-  V1=V0+kf*(V1-V0);
+
   
+  V1=difAngle(angleRead.raw,angle0)/(t1-t0);
+//  if(fabs(V1-V0)>100)V1=V0;
   
+  V1=V1*(50.0/3);
+  Serial.print(V1);
+  Serial.print("  ");
+  V1=V0+Kf*(V1-V0);
   V0=V1;
+  
   angle1=angle0;
+  
   t0=t1;
   
   
-  error=V1-SpeedRef;
-
-  PID=SpeedRef+Kp*error;
   
+  error=SpeedRef-V1;
+  
+  PID=SpeedRef+Kp*error;
+  Serial.println(PID); 
   
   //calcula la velocidad
   
+  dly = fabs(1.0/(PID))*(150/32)*1e3;
   
-  
-  dly = fabs(1.0 / (PID / 60.0 * 200.0 * 32.0 ) / 2.0) * 1e6;
   if (PID == 0) dly = 0;
 
   t = millis();
   
-  while (millis() - t < 10) {
+  while (millis() - t < 20) {
     if (dly == 0) continue;
     if (error >= 0) {
       digitalWrite(DIR_PIN, HIGH);
@@ -137,6 +144,6 @@ void loop() {
     }
   
   }
-
+  
 
 }
