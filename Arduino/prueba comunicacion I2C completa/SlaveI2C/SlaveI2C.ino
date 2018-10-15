@@ -14,7 +14,7 @@
 #define SLEEP 10   // Espera entre movimientos
 #define STEP 100     // Ancho del pulso para el stepper
 
-#define SPEED_X 40
+#define SPEED_X 80
 #define REF_HOME -50
 
 
@@ -30,15 +30,14 @@ float param1;
 int param2;
 
 // variable de estado
-
-byte done;
-double posX;  //theta1 o theta 2
-double posX_ref;  //theta1_ref, theta2_ref;
+char done;
+float posX;  //theta1 o theta 2
+float posX_ref;  //theta1_ref, theta2_ref;
 
 // parametros
 float K[3];
 float Vmax, Amax, A2max;
-float DeadZone=0.4 ;
+float DeadZone=0.04 ;
 
 // Tipo de dato para almacenar un float y poder acceder a sus bytes de forma cómoda
 union Float {
@@ -86,9 +85,9 @@ void sendStep(int delay_step, short int dir) {
 
   digitalWrite(DIR_PIN, ((dir >= 1) ? HIGH : LOW));
   digitalWrite(STEP_PIN, HIGH);
-  delayMicroseconds(delay_step);
+  delay(delay_step);
   digitalWrite(STEP_PIN, LOW);
-  delayMicroseconds(delay_step);
+  delay(delay_step);
 }
 
 
@@ -111,7 +110,7 @@ float leerEncoder()  {
 
 float dif(float a, float b) {
 
-  double angulo = a - b;
+  float angulo = a - b;
 
   if (angulo < -180.0)
     return 360.0 + angulo;
@@ -204,37 +203,43 @@ void receiveEvent(int howMany) {
   if (Wire.available() > 0) {
     MSG = "";
     for (int i = 0; i < howMany; i++)MSG += (char)Wire.read();
-    process_MSG(MSG);
-    done = 0;
+    process_MSG(MSG); 
   }
 }
-
+String aux_posX="";
 void requestEvent() {
 
   if (Type == 'R') {
-    if (ID_action == 20)
-      Wire.write((byte)posX);
+    if (ID_action == 20){
+      aux_posX=String(posX);
+      for(int i=0;aux_posX.length()>i;i++)Wire.write(aux_posX[i]);
       delay(10);
-      done=1;
+      done='1';
+    }
   }
   else {
     switch (ID_action) {
       case 0: {
           //Caso HOME
-          if (abs(posX - posX_ref) <= DeadZone) done = 1;
+          if (abs(posX - posX_ref) <= DeadZone) done = '1';
+          else done='0';
+          
+          
           break;
         }
       case 2: {
           break;
         }
       case 3: {
+        if (abs(posX - posX_ref) <= DeadZone) done = '1';
+          else done='0';
           break;
         }
-    }
-    
-   
+    } 
   }
+  
    Wire.write(done);
+   delay(10);
 
 }
 
@@ -250,10 +255,10 @@ void move_X_to(long int positionX, float speedScrew) {
   nstep = 1;
 
   if (distance > 0) {
-    posX += (double) nstep * 0.04;
+    posX += (double) nstep * 0.04*1.9;
   }
   else{
-    posX -= (double) nstep * 0.04;
+    posX -= (double) nstep * 0.04*1.9;
   }
 
   //una vuelta son 200 pasos y avanza 8 mm
@@ -263,7 +268,16 @@ void move_X_to(long int positionX, float speedScrew) {
   // tengo que calcular la velocidad lineal ahora tengo velocidad angular
   //dly = fabs(1.0 /(speedScrew / 60.0 * 200.0 ) / 2.0)*1e6;
 
-  dly = (1.0 / (speedScrew * 6e9));
+  //*32 PARA EL EJE X
+
+  /************************/
+  // Como calcular el tiempo del delay (sin micropasos)
+  // dly en milisegundos
+  
+  dly=(1/(speedScrew))*(150);
+  
+  /********************/
+  //dly = (1.0 / (speedScrew * 6e9));
   n = 0;
 
   while (n <= nstep) {
@@ -315,7 +329,7 @@ void control_loop() {
   if (abs(posX - posX_ref) >= DeadZone) {
     move_X_to(posX_ref, SPEED_X);
   }
- // printData();
+ printData();
 }
 
 void loop() {
@@ -326,7 +340,7 @@ void loop() {
     posX_ref = 0;
     delay(1);
     
-    done=1;
+    done='1';
     Serial.println("HOME");
   }
 
