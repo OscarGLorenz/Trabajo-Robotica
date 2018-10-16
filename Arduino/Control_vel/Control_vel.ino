@@ -8,6 +8,10 @@
 #define EN_PIN 6 //Pin enable del DRV8825
 
 #define INIT 0 // Posición inicial
+
+#define TO_RAD 0.01745329   //2*PI/360
+#define TO_RPM 6.2831853   //60/2*PI
+
 // Unión para convertir un float en su representación en bytes
 union Float {
   float raw;
@@ -33,13 +37,14 @@ float leerEncoder()  {
 // Diferencia entre ángulos (-180<phi<=180)
 float difAngle(float a, float b) {
   double angulo = a - b;
-  double aux;
+  double aux = angulo;
   //zona muerta
-  if (angulo < -180.0)
-    aux=360.0 + angulo;
+
+  if (angulo <= -180.0)
+    aux = 360.0 + angulo;
   else if (angulo > 180.0)
-    aux =-360.0 + angulo;
-  //if (aux<0.5) aux=0;
+    aux = -360.0 + angulo;
+  //if (aux<0.01) aux=0;
   return aux;
 }
 
@@ -74,60 +79,50 @@ unsigned long dly = 0;
 Float speed, angleRef, angleRead;
 
 
-float error,Kp,Kf,PID,t1;
-float t0=0;
-float V0 =0;
-float V1=0;
-float angle0=0;
-float angle1=0;
+float error, Kp, Ki, Kf, PID, inc_t;
+float Past_error = 0;
+float t0 = 0;
+float V0 = 0;
+float V1 = 0;
+float angle0 = 0;
+float angle1 = 0;
+float SpeedRef = 10;
+float diff;
 
-float SpeedRef;
 void loop() {
-  
-  /*if (Serial.available() > 0) Serial.readBytes(angleRef.buffer, sizeof(angleRef)); // Lee el angulo de referencia;
-   
+  Kp = 5;
+  Ki = 0.5;
+  Kf = 0.2;
   angleRead.raw = leerEncoder();
-  
-  Serial.write(angleRead.buffer, sizeof(angleRead)); // Enviar a simulink la distancia captada
-  */
 
-  SpeedRef=-200;
-  
-  Kp=1;
-  Kf=0.001;
-  angleRead.raw = leerEncoder();
-  t1=millis();  
+  diff = (difAngle(angleRead.raw, angle1)) * TO_RAD;
+  angle1 = angleRead.raw;
 
-  
-  V1=difAngle(angleRead.raw,angle0)/(t1-t0);
-//  if(fabs(V1-V0)>100)V1=V0;
-  
-  V1=V1*(50.0/3);
-  Serial.print(V1);
-  Serial.print("  ");
-  V1=V0+Kf*(V1-V0);
-  V0=V1;
-  
-  angle1=angle0;
-  
-  t0=t1;
-  
-  
-  
-  error=SpeedRef-V1;
-  
-  PID=SpeedRef+Kp*error;
-  Serial.println(PID); 
-  
+  inc_t = (millis() - t0) / 1000;
+
+  V1 = diff / inc_t;
+
+  t0 = millis();
+  V1 = V0 + Kf * (V1 - V0);
+  V0 = V1;
+
+  error = SpeedRef - V1;
+
+  PID = SpeedRef + (Kp*(1+error/10)) * error + Ki * (error - Past_error);
+  Past_error = error;
+
+  Serial.println(error);
+
   //calcula la velocidad
+  //transformar a RPM
   
-  dly = fabs(1.0/(PID))*(150/32)*1e3;
-  
+  dly = fabs(1.0 / (PID)) * (4.90873) * 1e2;
+
   if (PID == 0) dly = 0;
 
   t = millis();
-  
-  while (millis() - t < 20) {
+
+  while (millis() - t < 10) {
     if (dly == 0) continue;
     if (error >= 0) {
       digitalWrite(DIR_PIN, HIGH);
@@ -142,8 +137,8 @@ void loop() {
       digitalWrite(STEP_PIN, LOW);
       delayMicroseconds(dly);
     }
-  
+
   }
-  
+
 
 }
