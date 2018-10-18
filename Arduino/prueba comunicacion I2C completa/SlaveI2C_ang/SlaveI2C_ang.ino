@@ -14,8 +14,11 @@
 #define SLEEP 10   // Espera entre movimientos
 #define STEP 100     // Ancho del pulso para el stepper
 
-#define SPEED_THETA 80
+#define SPEED_THETA 20
 #define REF_HOME -50
+
+
+#define TO_RAD 0.01745329   //2*PI/360
 
 
 
@@ -40,17 +43,21 @@ float  Amax, A2max;
 float Vmax = SPEED_THETA;
 float DeadZone = 0.04 ;
 
-
-
-
 //PID THINGS
-
-
-
 float Kp, Ki, Kf;
-float error, pastError, PID, dly;
 
-float angle0, t1, t0, V1, V0;
+float error, pastError, PID, dly;
+float t0 = 0;
+float inc_t, t;
+float Past_error = 0;
+float V0 = 0;
+float V1 = 0;
+float angle0 = 0;
+float angle1 = 0;
+float SpeedRef = 10;
+float diff;
+
+
 
 
 // Tipo de dato para almacenar un float y poder acceder a sus bytes de forma cómoda
@@ -58,8 +65,6 @@ union Float {
   float raw;
   byte buffer[sizeof(float)];
 };
-
-
 
 void Initialize() {
   pinMode(LED_BUILTIN, OUTPUT); // LED
@@ -104,8 +109,6 @@ void sendStep(int delay_step, short int dir) {
   delay(delay_step);
 }
 
-
-
 float leerEncoder()  {
   long angulo;
 
@@ -125,9 +128,8 @@ float leerEncoder()  {
 float difAngle(float a, float b) {
 
   float angulo = a - b;
-
-  if (fabs(angulo) < (DeadZone * 0.5)) return 0;
-  else if (angulo < -180.0)
+  //if (fabs(angulo) < (DeadZone * 0.5)) return 0;
+  if (angulo < -180.0)
     return 360.0 + angulo;
   else if (angulo > 180.0)
     return -360.0 + angulo;
@@ -221,7 +223,9 @@ void receiveEvent(int howMany) {
     process_MSG(MSG);
   }
 }
+
 String aux_theta1 = "";
+
 void requestEvent() {
 
   if (Type == 'R') {
@@ -313,7 +317,11 @@ void action(int ID_action, float param1, int param2) {
 
     case 0: theta1_ref = REF_HOME; break;
     case 1: break;
-    case 2: Vmax = param1; break;
+    case 2: {
+        Vmax = param1;
+        //control_loop_vel();
+        break;
+      }
     case 3: theta1_ref = param1; break;
     case 4: break;
 
@@ -349,56 +357,63 @@ void printData() {
 
 
 void control_loop_pos() {
-  Kp = 1;
+  Kp = 2;
   Ki = 0.1;
-  
-  theta1 = leerEncoder();
-  error = difAngle(theta1_ref, theta1);
-  PID = Kp * error + Ki * (error - pastError);
-  dly = fabs(1 / (PID)) * (150 / 32);
-  pastError = error;
-  float  t = millis();
-  if (dly != 0) {
-    while ((millis() - t ) < 10) {
+  t = millis();
+  while (millis() - t < 10) {
+    theta1 = leerEncoder();
+    error = difAngle(theta1_ref, theta1);
+    PID = Kp * error + Ki * (error - pastError);
+    dly = fabs(1 / (PID)) * (150 / 32);
+    pastError = error;
+    if (dly != 0) {
       sendStep(dly, (PID > 0) ? 1 : 0);
     }
   }
-  printData();
 }
 
-float t;
 void control_loop_vel() {
 
-  Kp = 1;
+  Kp = 5;
+  Ki = 0.5;
   Kf = 0.2;
-
-  theta1 = leerEncoder();
-  t1 = millis();
-  if ((t1 - t0) > 0.5) {
-    V1 = difAngle(theta1, angle0) / (t1 - t0);
-    V1 = V1 * (50.0 / 3); // para pasar a RPM
-    V1 = V0 + Kf * (V1 - V0);
-  }
-  V0 = V1;
-  angle0 = theta1;
-  t0 = t1;
-
-  error = V1 - Vmax; // hay que cambiar la referencia por una de velocidad
-  PID = Vmax + Kp * error;
-  dly = fabs(1 / (PID)) * (150 / 32);
-
+  SpeedRef = 1;
   t = millis();
+  
+ 
+    theta1 = leerEncoder();
 
-  if (dly != 0) {
-    sendStep(dly, (PID > 0) ? 1 : 0);
+    diff = (difAngle(theta1, angle0)) * TO_RAD;
+    angle0 = theta1;
+
+    inc_t = (millis() - t0) / 1000;
+
+    V1 = diff / inc_t;
+    
+    t0 = millis();
+    V1 = V0 + Kf * (V1 - V0);
+    V0 = V1;
+
+    error = SpeedRef - V1;
+
+    PID = SpeedRef + (Kp * (1 + error / 10)) * error + Ki * (error - Past_error);
+    Past_error = error;
+
+    //calcula la velocidad
+
+    dly = fabs(1.0 / (PID)) * (4.90873);
+
+ while (millis() - t < 2000) {
+    if (dly != 0) {
+      sendStep(dly, (PID > 0) ? 1 : 0);
+    }
   }
-
-  Serial.println(PID);
+  Serial.println(V1);
 }
 
 
 void loop() {
-
+  
   // Si llega algo por serial cambiar la referencia
   if (ID_action == 30) {
     theta1 = 0;
@@ -411,9 +426,11 @@ void loop() {
     action(ID_action, param1, param2);
   }
 
- // control_loop_pos();
+  Serial.println(done);
+  //if(ID_action!=2)control_loop_pos();
+   control_loop_vel();
 
-
+  //printData();
 
 
 }
