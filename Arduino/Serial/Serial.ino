@@ -25,6 +25,9 @@ void loop() {
       int cmd = Serial.parseInt();
       switch (cmd) {
         case 0:
+        q1.goPos(0);
+        q2.goPos(-M_PI_4);
+        q3.goPos(M_PI_4);
           break;
 
         case 1:
