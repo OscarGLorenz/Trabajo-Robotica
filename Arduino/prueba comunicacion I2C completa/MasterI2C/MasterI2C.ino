@@ -47,7 +47,7 @@ void m_address() {
 
 void read_MSG() {
 
-  //MSG="M1 S3 5";
+  //MSG="M1 S3 -5";
   char auxc;
   if (Serial.available() > 3)MSG = "";
   while (Serial.available()) {
@@ -57,6 +57,7 @@ void read_MSG() {
   process_MSG(MSG);
   Serial.print("MSG = ");
   Serial.println(MSG);
+
 }
 
 void process_MSG(String mensaje) {
@@ -134,6 +135,7 @@ void loop() {
   if (analogRead(ENDSTOP_PIN) < 150 && (ID_action == 3 || ID_action == 0) && param1 <= 0) {
     I2C_Send(STOP, M1_address);
     delay(10);
+    Serial.print("STOP");
     makeRequest(M1_address);
   }
 
