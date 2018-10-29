@@ -6,6 +6,7 @@
 #define Q2 1
 #define Q3 3
 #define PC 0
+#define T_OUT 100
 
 //Variables globales
 String MSG;
@@ -18,18 +19,19 @@ int address;
 String aux_MSG;
 float Dato[3];
 String aux_Dato;
+String MSG_rec;
 
 
 void initialize() {
   Wire.begin();         // Unirse al bus 12C
-  Serial.begin(9600); // Iniciar la comunicación Serial
-  Serial.setTimeout(10);
-  Serial1.begin(9600);
-  Serial1.setTimeout(10);
-  Serial2.begin(9600);
-  Serial2.setTimeout(10);
-  Serial3.begin(9600);
-  Serial3.setTimeout(10);
+  Serial.begin(115200); // Iniciar la comunicación Serial
+  Serial.setTimeout(T_OUT);
+  Serial1.begin(115200);
+  Serial1.setTimeout(T_OUT);
+  Serial2.begin(115200);
+  Serial2.setTimeout(T_OUT);
+  Serial3.begin(115200);
+  Serial3.setTimeout(T_OUT);
   pinMode(ENDSTOP_PIN, INPUT);
 }
 
@@ -49,7 +51,9 @@ void read_MSG(int device) {
     case 0: {
         if (Serial.available() > 1) {
           MSG = Serial.readString();
+          process_MSG(MSG);
         }
+
       } break;
     case 1: {
         if (Serial1.available() > 1) {
@@ -57,7 +61,6 @@ void read_MSG(int device) {
         }
       } break;
     case 2: {
-
         if (Serial2.available() > 1) {
           MSG = Serial2.readString();
         }
@@ -126,9 +129,9 @@ void Serial_Send (String code, int device) {
     case 2: {
         Serial2.print(code);
         delay(10);
-        while (Serial2.available () < (MSG.length()+2) && Serial2.read()=='e') {
+        /*while (Serial2.available () < (MSG.length()+2) && Serial2.read()=='e') {
           delay(10);
-        }
+          }*/
       } break;
 
     case 3: {
@@ -180,9 +183,14 @@ void loop() {
   if (analogRead(ENDSTOP_PIN) < 150 ) {
 
   }
-
-  Serial_Send(MSG, Q2);
-
+  /*if (Serial1.available() > 1){
+    Serial1.flush();
+    MSG_rec=Serial1.read();
+    }
+    Serial.println(MSG_rec);*/
+  Serial_Send(aux_MSG, Q2);
+  Serial.println(aux_MSG);
+  //delay(50);
   /*else {
     if (sig == '1') {
       I2C_Send(aux_MSG, address);
@@ -194,7 +202,6 @@ void loop() {
     }
     }*/
 
-  Serial.println(MSG);
-
-
+  //Serial.println(MSG);
+  delay(1000);
 }
