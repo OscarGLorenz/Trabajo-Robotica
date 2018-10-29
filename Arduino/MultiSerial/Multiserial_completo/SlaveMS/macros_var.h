@@ -18,8 +18,8 @@
 #define STEP 100     // Ancho del pulso para el stepper
 
 #define SPEED_THETA 20
-#define REF_HOME -50
-#define HOME 0
+#define REF_HOME 120
+#define HOME 0.5
 #define TO_RAD 0.01745329   //2*PI/360
 
 /* DECLARACION DE VARIABLES GLOBALES*/
@@ -42,14 +42,14 @@ float Vref = SPEED_THETA;
 // parametros
 float K[3];
 float  Amax, A2max;
-float DeadZone = 0.04 ;
+float DeadZone = 1;
 
 
 //PID THINGS
 
 //pos
 
-float Kp_pos=1;
+float Kp_pos=5;
 float Ki_pos=0.01;
 float error_pos=0;
 float pastError_pos=0;
@@ -58,7 +58,7 @@ float PID_pos=0;
 //vel
 
 float Kp_vel=5;
-float Ki_vel=0.5;
+float Ki_vel=0.0;
 float Kf_vel=0.2;
 float error_vel=0;
 float pastError_vel=0;

@@ -1,16 +1,17 @@
 #include "macros_var.h"
-
+#define TIMEOUT 100
 void setup() {
   Initialize();
   resetParam();
 }
 
 void loop() {
+
   Serial_receive();
-  Serial.print(MSG);
-  /*action(ID_action, param1, param2);
+  //printData();
+  action(ID_action, param1, param2);
   if (ID_action == 2) control_loop_vel();
-  else control_loop_pos();*/
+  else control_loop_pos();
 
 
 }
@@ -93,18 +94,18 @@ void requestEvent() {
 
 void control_loop_pos() {
   t = millis();
-
   theta1 = leerEncoder();
   error_pos = difAngle(theta1_ref, theta1);
-  PID_pos = Kp_pos * error_pos + Ki_pos * (error_pos - pastError_pos);
+
+  PID_pos = Kp_pos * error_pos ;//+ Ki_pos * (error_pos - pastError_pos);
   dly = fabs(1 / (PID_pos)) * (150 / 32);
   pastError_pos = error_pos;
-
-  while (millis() - t < 5) {
+  
     if (dly != 0) {
       sendStep(dly, (PID_pos > 0) ? 1 : 0);
     }
-  }
+  
+
 }
 
 void control_loop_vel() {
@@ -164,17 +165,15 @@ void printData() {
 /*********************************************************/
 
 void Serial_receive() {
-
   if (Serial1.available() > 1) {
-    Serial.println("H1");
     MSG = "";
-    MSG = Serial1.readString();
-    process_MSG(MSG);
-    delay(1);
-    MSG+=" R";
-    Serial1.println(MSG);
+    Serial1.flush();
   }
-
+  while (Serial1.available() > 1) {
+    MSG += Serial1.readString();
+  }
+  //Serial.println(MSG);
+  process_MSG(MSG);
 }
 
 
@@ -312,10 +311,10 @@ void Initialize() {
   // I2C
 
   // Serial
-  Serial.begin(9600);         // Comunicación Serial a 115200 Baudios
-  Serial.setTimeout(10);
-  Serial1.begin(9600);         // Comunicación Serial a 115200 Baudios
-  Serial1.setTimeout(100); // Timeout de 5ms
+  Serial.begin(115200);         // Comunicación Serial a 115200 Baudios
+  Serial.setTimeout(TIMEOUT);
+  Serial1.begin(115200);         // Comunicación Serial a 115200 Baudios
+  Serial1.setTimeout(TIMEOUT); // Timeout de 5ms
 
   // SPI
   SPISettings settings(10000000, MSBFIRST, SPI_MODE1);  // Parámetros de la comunicación (Datasheet AS5047D)
