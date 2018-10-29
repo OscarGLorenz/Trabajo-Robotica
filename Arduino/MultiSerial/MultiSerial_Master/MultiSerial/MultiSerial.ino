@@ -8,9 +8,12 @@ void setup() {
 }
 
 void loop() {
-  if (Serial.available()) {             // Si se lee algo por el serial USB
+  if (Serial.available()>1) {             // Si se lee algo por el serial USB
     int motor = Serial.parseInt();      // Que motor se elige
     float q = Serial.parseFloat();      // Posición del motor
+    Serial.print(motor);
+    Serial.print(" ");
+    Serial.println(q);
     switch (motor) {               
       case 1:
       Serial1.println(q);               // Mover motor 1
@@ -25,5 +28,8 @@ void loop() {
       break;
 
     }
+  }
+  if(Serial1.available()>1){
+    Serial.println(Serial1.parseFloat());
   }
 }
