@@ -33,8 +33,8 @@ float leerEncoder()  {
 // Diferencia entre ángulos (-180<phi<=180)
 float difAngle(float a, float b) {
   double angulo = a - b;
-  //zona muerta 
-  if(abs(angulo)<1) return 0;
+  //zona muerta
+  if (abs(angulo) < 1) return 0;
   else if (angulo < -180.0)
     return 360.0 + angulo;
   else if (angulo > 180.0)
@@ -54,7 +54,9 @@ void setup() {
 
   // Serial
   Serial.begin(115200);         // Comunicación Serial a 115200 Baudios
-  Serial.setTimeout(5);         // Timeout de 5ms
+  Serial.setTimeout(10);    
+  Serial1.begin(115200);         // Comunicación Serial a 115200 Baudios
+  Serial.setTimeout(10);    // Timeout de 5ms
 
   // SPI
   SPISettings settings(10000000, MSBFIRST, SPI_MODE1);  // Parámetros de la comunicación (Datasheet AS5047D)
@@ -73,28 +75,59 @@ unsigned long dly = 0;
 Float speed, angleRef, angleRead;
 
 
-float error, Kp,PID;
+float error, Kp, PID;
+
+
+float abs_angle;
+int nvueltas = 0;
+float pastAngleRel = 0;
+float HomeAngle=256;
+
+float getAngle() {
+  float angleRel = leerEncoder();
+
+  if ((pastAngleRel >=0 && pastAngleRel < 10) && (angleRel< 360 && angleRel > 350)) nvueltas += 1;
+  else if ((pastAngleRel < 360 && pastAngleRel > 350) && (angleRel >= 0 && angleRel < 10)) nvueltas -= 1;
+  
+  pastAngleRel=angleRel;
+
+  float fangle=HomeAngle-angleRel;
+  return (fangle + nvueltas * 360)/5.0;
+}
+float q1=20;
 
 void loop() {
-  Kp=2;
-  //*angleRef.raw=37;
-
-  if (Serial.available() > 1) angleRef.raw=Serial.parseFloat(); // Lee el angulo de referencia;
-   
-  angleRead.raw = leerEncoder();
   
-  Serial.println(angleRead.raw); // Enviar a simulink la distancia captada
+  if (Serial.available()>1){
+     q1=Serial.parseInt();
+     }
+    
+  if (q1<=-90){
+    q1=0;
+    nvueltas=0;
+    HomeAngle=leerEncoder();
+    }
 
-  error=difAngle(angleRef.raw,angleRead.raw);
-  //calcula la velocidad
-  PID=Kp*error;
+    
+  Serial.print(getAngle());
+  Serial.print(" ");
+  Serial.println(q1);
   
-  dly = fabs(1.0 / (PID / 60.0 * 200.0 * 32.0 ) / 2.0) * 1e6;
-  if (PID == 0) dly = 0;
+     Kp=1.5;
+  
+    angleRead.raw = getAngle();
 
+    //Serial.println(angleRead.raw); // Enviar a simulink la distancia captada
 
-  t = millis();
-  while (millis() - t < 10) {
+    error=-q1+angleRead.raw;
+    //calcula la velocidad
+    PID=Kp*error;
+    
+    dly = fabs(1.0 / (PID / 60.0 * 200.0 * 32.0 ) / 2.0) * 1e6;
+    if (PID == 0) dly = 0;
+
+    t = millis();
+    while (millis() - t < 10) {
     if (dly == 0) continue;
     if (error >= 0) {
       digitalWrite(DIR_PIN, HIGH);
@@ -109,7 +142,7 @@ void loop() {
       digitalWrite(STEP_PIN, LOW);
       delayMicroseconds(dly);
     }
-  }
-
+    }
+  
 
 }
