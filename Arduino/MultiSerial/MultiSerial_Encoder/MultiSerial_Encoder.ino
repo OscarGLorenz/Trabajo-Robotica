@@ -8,11 +8,7 @@
 
 #define RESOLUTION 0.0219726 // 0.02197265625.... 360/(1<<14) Resolución del encoder 14 bit
 
-<<<<<<< Updated upstream
-#define ZM 1   // Zona muerta (Histéresis)
-=======
 #define ZM 0.5   // Zona muerta (Histéresis)
->>>>>>> Stashed changes
 #define INIT 0 // Posición inicial
 #define SLEEP 10   // Espera entre movimientos
 #define STEP 100     // Ancho del pulso para el stepper
@@ -89,23 +85,11 @@ void setup() {
 void loop() {
   // Si llega algo por serial cambiar la referencia
   if ( Serial1.available() > 1) {           // Si se recibe algo por serial
-<<<<<<< Updated upstream
-    int type = Serial1.read();
-    Serial1.read();                         //Eliminar espacio
-    int pos = Serial1.read();
-    switch (pos) {
-      case 1:
-      Serial1.parsefloat();
-      case 2:
-        ref = pos;
-        break;
-      
-    }
+     ref=(Serial1.parseFloat()); // Leer posición y mover husillo
+        Serial1.parseFloat();               // Purgar
   }
-  //advance(Serial1.parseFloat(), 300); // Leer posición y mover husillo
-  //Serial1.parseFloat();               // Purgar
-
-
+  Serial.println(ref);
+  
   // Calcular el error
   float err = dif(ref, leerEncoder());
 
