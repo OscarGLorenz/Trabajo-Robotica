@@ -1,17 +1,18 @@
 #define ENDSTOP_PIN A0
+
 void setup() {
   Serial.begin(9600);  Serial.setTimeout(10); // Serial USB del MEGA
-
   Serial1.begin(9600); Serial1.setTimeout(10); // Serial 1 del MEGA
   Serial2.begin(9600); Serial2.setTimeout(10); // Serial 2 del MEGA
   Serial3.begin(9600); Serial3.setTimeout(10); // Serial 3 del MEGA
 
 }
+
 void loop() {
   if (analogRead(ENDSTOP_PIN) > 150) {
     if (Serial.available() > 1) {           // Si se lee algo por el serial USB
-      int motor = Serial.parseInt();      // Que motor se elige
-      float q = Serial.parseFloat();      // Posición del motor
+      int motor = Serial.parseInt();        // Que motor se elige
+      float q = Serial.parseFloat();        // Posición del motor
       Serial.print(motor);
       Serial.print(" ");
       Serial.println(q);

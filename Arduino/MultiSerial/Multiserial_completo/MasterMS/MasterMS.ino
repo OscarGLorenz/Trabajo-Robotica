@@ -1,12 +1,14 @@
 #include <Wire.h>
 
-#define ENDSTOP_PIN A0
+#define ENDSTOP_PIN1 A1
+#define ENDSTOP_PIN2 A2
+#define ENDSTOP_PIN3 A3
 #define STOP "J30"
-#define Q1 2
-#define Q2 1
+#define Q1 1
+#define Q2 2
 #define Q3 3
 #define PC 0
-#define T_OUT 100
+#define T_OUT 10
 
 //Variables globales
 String MSG;
@@ -21,7 +23,6 @@ float Dato[3];
 String aux_Dato;
 String MSG_rec;
 
-
 void initialize() {
   Wire.begin();         // Unirse al bus 12C
   Serial.begin(115200); // Iniciar la comunicación Serial
@@ -32,7 +33,7 @@ void initialize() {
   Serial2.setTimeout(T_OUT);
   Serial3.begin(115200);
   Serial3.setTimeout(T_OUT);
-  pinMode(ENDSTOP_PIN, INPUT);
+  pinMode(ENDSTOP_PIN1, INPUT);
 }
 
 void resetParam() {
@@ -46,23 +47,26 @@ void read_MSG(int device) {
 
   //MSG="M1 S3 -5";
   char auxc;
-
+  int flag = 0;
   switch (device) {
     case 0: {
         if (Serial.available() > 1) {
           MSG = Serial.readString();
-          process_MSG(MSG);
+          Serial.parseFloat();
+          flag = 1;
         }
 
       } break;
     case 1: {
         if (Serial1.available() > 1) {
           MSG = Serial1.readString();
+          flag = 1;
         }
       } break;
     case 2: {
         if (Serial2.available() > 1) {
           MSG = Serial2.readString();
+          flag = 1;
         }
       } break;
 
@@ -70,10 +74,16 @@ void read_MSG(int device) {
 
         if (Serial3.available() > 1) {
           MSG = Serial3.readString();
+          flag = 1;
         }
       } break;
 
     default: break;
+  }
+  if (flag) {
+    process_MSG(MSG);
+    Serial_Send(aux_MSG, (int) (Nmotor-'0'));
+    Serial.println(aux_MSG);
   }
 
 
@@ -83,13 +93,14 @@ void process_MSG(String mensaje) {
 
   int i = 0;
   String ID, p1;
+  char nm;
   ID = "";
   p1 = "";
   resetParam();
-
   //Captura el motor
   mensaje.remove(0, 1);
-  Nmotor = mensaje[0];
+  nm = mensaje[0];
+  Nmotor = nm;
 
   mensaje.remove(0, 2);
 
@@ -121,21 +132,19 @@ void Serial_Send (String code, int device) {
   switch (device) {
     case 0: {
         Serial.println(code);
-
       } break;
     case 1: {
         Serial1.print(code);
+         delay(10);
       } break;
     case 2: {
         Serial2.print(code);
         delay(10);
-        /*while (Serial2.available () < (MSG.length()+2) && Serial2.read()=='e') {
-          delay(10);
-          }*/
       } break;
 
     case 3: {
         Serial3.print(code);
+         delay(10);
       } break;
 
     default: break;
@@ -171,37 +180,20 @@ void setup() {
 }
 void loop() {
 
-  read_MSG(PC);
-
-  /*if (analogRead(ENDSTOP_PIN) < 150 && (ID_action == 3 || ID_action == 0) && param1 <= 0) {
-    I2C_Send(STOP, M1_address);
-    delay(10);
-    Serial.print("STOP");
-    makeRequest(M1_address);
-    }*/
-
-  if (analogRead(ENDSTOP_PIN) < 150 ) {
-
+  if (analogRead(ENDSTOP_PIN1) < 150 ) {
+    Serial1.print("-100");
+    delay(50);
   }
-  /*if (Serial1.available() > 1){
-    Serial1.flush();
-    MSG_rec=Serial1.read();
-    }
-    Serial.println(MSG_rec);*/
-  Serial_Send(aux_MSG, Q2);
-  Serial.println(aux_MSG);
-  //delay(50);
-  /*else {
-    if (sig == '1') {
-      I2C_Send(aux_MSG, address);
-      sig = '0';
-    }
-    else if (sig == '0') {
-      makeRequest(address);
-      delay(10);
-    }
-    }*/
-
-  //Serial.println(MSG);
-  delay(1000);
+  else if (analogRead(ENDSTOP_PIN2) < 150) {
+    Serial2.print("-100");
+    delay(50);
+  }
+  else if (analogRead(ENDSTOP_PIN3) < 150) {
+    Serial3.print("100");
+    delay(50);
+  }
+  else {
+    read_MSG(PC);
+    delay(50);
+  }
 }
