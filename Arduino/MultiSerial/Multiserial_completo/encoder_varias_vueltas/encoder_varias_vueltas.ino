@@ -94,14 +94,14 @@ float getAngle() {
   float fangle=HomeAngle-angleRel;
   return (fangle + nvueltas * 360)/5.0;
 }
-float q1=20;
+float q1=00;
 
 void loop() {
   
-  if (Serial.available()>1){
+  /*if (Serial.available()>1){
      q1=Serial.parseInt();
      }
-    
+    */
   if (q1<=-90){
     q1=0;
     nvueltas=0;
