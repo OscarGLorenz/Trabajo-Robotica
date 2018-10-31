@@ -97,8 +97,8 @@ float getAngle() {
 float q1 = 20;
 
 String MSG;
-int ID_action;
-float param1;
+int ID_action = 2;
+float param1 = 0;
 int param2;
 
 
@@ -225,68 +225,75 @@ void advance(float distance, float speedScrew) {
 
 }
 
-float SpeedScrew=0;
+float SpeedScrew = 0;
+int endflag =0;
+void action(int ID, float p1, int p2) {
+  switch (ID) {
+    case 0: {
 
-void action(int ID,float p1,int p2){
-  switch (ID){
-    case 0:{x=1000;SpeedScrew=100;
-      }break;
-    case 1:{
-      }break;
-    case 2:{xref=p1;SpeedScrew=300;
-      }break;
-    case 3:{
-      }break;
-    
-    case 20:{
-      }break;
-    case 30:{
-      }break;
+        if (endflag==0){
+          
+          xref=-1000;
+          moveQ1(150);
+          }
+        else {xref=0;x=0;}
+        
+      } break;
+    case 1: {
+      } break;
+    case 2: {
+        xref = p1; SpeedScrew = 300; endflag = 0;
+      } break;
+    case 3: {
+      } break;
+
+    case 20: {
+      } break;
+    case 30: {
+        if (endflag==0){advance(1,300);endflag=1;x=0;}
+      } break;
     default:;
-    
-    }
+
+  }
+
+}
+
+void moveQ1(float vel) {
   
+  if ((xref - x) > 1) {
+    advance(0.5, vel); // Leer posición y mover husillo
+    x += 0.5;
+  }
+  else if ((xref - x) < -1) {
+    advance(-.5, vel); // Leer posición y mover husillo
+    x -= 0.5;
   }
 
-void moveQ1(float vel){
 
-  if (xref < -90) {
-    xref =3;
-    x = 0;
-  }
-
-  if ((xref - x) > .4) {
-    advance(0.1, vel); // Leer posición y mover husillo
-    x+=0.1;
-  }
-  else if ((xref - x) < -.4) {
-    advance(-.1, vel); // Leer posición y mover husillo
-    x-=0.1;
-  }
-
-  
-  };
+};
 void loop() {
-  
-  //read_serial1();
-  if (Serial.available()>1){
+
+  read_serial1();
+
+  /*if (Serial.available()>1){
     Serial.flush();
     MSG=Serial.readStringUntil('\n');
     Serial.parseFloat();
     process_MSG(MSG);
-   }
+    }*/
 
 
-   
-   Serial.print(x);
-   Serial.print(" ");
-   Serial.println(xref);
-      
-  
-  action(ID_action,param1,param2);
-  if(ID_action !=3){
+  Serial.print(x);
+  Serial.print(" ");
+  Serial.print(xref);
+  Serial.print(" Id: ");
+  Serial.println(ID_action);
+
+
+  action(ID_action, param1, param2);
+  if (ID_action != 3 && ID_action != 30){
     moveQ1(SpeedScrew);
-    }
-  
- 
+  }
+
+
 }

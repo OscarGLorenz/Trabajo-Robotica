@@ -186,11 +186,7 @@ void process_MSG(String mensaje) {
 
 
 void control_pos() {
-  if (q1 <= -90) {
-    q1 = 0;
-    nvueltas = 0;
-    HomeAngle = leerEncoder();
-  }
+
 
 
   Serial.print(getAngle());
@@ -230,37 +226,41 @@ void control_pos() {
 
 }
 
-void action(int ID,float p1,int p2){
-  switch (ID){
-    case 0:{
-      }break;
-    case 1:{
-      }break;
-    case 2:{q1=p1;
-      }break;
-    case 3:{
-      }break;
-    
-    case 20:{
-      }break;
-    case 30:{
-      }break;
+void action(int ID, float p1, int p2) {
+  switch (ID) {
+    case 0: {
+      } break;
+    case 1: {
+      } break;
+    case 2: {
+        q1 = p1;
+      } break;
+    case 3: {
+      } break;
+
+    case 20: {
+      } break;
+    case 30: {
+        q1 = 0;
+        nvueltas = 0;
+        HomeAngle = leerEncoder();
+      } break;
     default:;
-    
-    }
-  
+
   }
+
+}
 
 void loop() {
 
   read_serial1();
-  action(ID_action,param1,param2);
-  if (ID_action!=3){
-  control_pos();
+  action(ID_action, param1, param2);
+  if (ID_action != 3 && ID_action != 30) {
+    control_pos();
   }
-  else Serial.print("V_control");
+ // else Serial.print("V_control");
 
- 
+
 
 
 

@@ -82,7 +82,7 @@ void read_MSG(int device) {
   }
   if (flag) {
     process_MSG(MSG);
-    Serial_Send(aux_MSG, (int) (Nmotor-'0'));
+    Serial_Send(aux_MSG, (int) (Nmotor - '0'));
     Serial.println(aux_MSG);
   }
 
@@ -135,7 +135,7 @@ void Serial_Send (String code, int device) {
       } break;
     case 1: {
         Serial1.print(code);
-         delay(10);
+        delay(10);
       } break;
     case 2: {
         Serial2.print(code);
@@ -144,7 +144,7 @@ void Serial_Send (String code, int device) {
 
     case 3: {
         Serial3.print(code);
-         delay(10);
+        delay(10);
       } break;
 
     default: break;
@@ -178,22 +178,21 @@ void Serial_Read(int device) {
 void setup() {
   initialize();
 }
+int flagl=0;
 void loop() {
-
   if (analogRead(ENDSTOP_PIN1) < 150 ) {
-    Serial1.print("-100");
+    Serial1.print("J30");
     delay(50);
   }
-  else if (analogRead(ENDSTOP_PIN2) < 150) {
-    Serial2.print("-100");
+  if (analogRead(ENDSTOP_PIN2) < 150) {
+    Serial2.print("J30");
     delay(50);
   }
-  else if (analogRead(ENDSTOP_PIN3) < 150) {
-    Serial3.print("100");
+  if (analogRead(ENDSTOP_PIN3) < 150) {
+    Serial3.print("J30");
     delay(50);
   }
-  else {
-    read_MSG(PC);
-    delay(50);
-  }
+
+  read_MSG(PC);
+  delay(50);
 }
