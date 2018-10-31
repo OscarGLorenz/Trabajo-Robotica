@@ -185,58 +185,55 @@ void process_MSG(String mensaje) {
 }
 
 
-void control_pos() {
-  if (q1 <= -90) {
-    q1 = 0;
-    nvueltas = 0;
-    HomeAngle = leerEncoder();
-  }
+float x = 0;
+float xref = 0;
 
 
-  Serial.print(getAngle());
-  Serial.print(" ");
-  Serial.println(q1);
+void advance(float distance, float speedScrew) {
 
-  Kp = 1.5;
+  long int nstep, n;
+  n = 0;
+  //una vuelta son 200 pasos y avanza 8 mm
+  nstep = abs((distance / 8.0) * 200);
 
-  angleRead.raw = getAngle();
+  if (speedScrew == 0) dly = 0;
 
-  //Serial.println(angleRead.raw); // Enviar a simulink la distancia captada
+  // tengo que calcular la velocidad lineal ahora tengo velocidad angular
+  dly = fabs((1.0 / (speedScrew / 60.0 * 200.0 ) / 2.0) * 1e6);
 
-  error = -q1 + angleRead.raw;
-  //calcula la velocidad
-  PID = Kp * error;
+  while (n <= nstep) {
 
-  dly = fabs(1.0 / (PID / 60.0 * 200.0 * 32.0 ) / 2.0) * 1e6;
-  if (PID == 0) dly = 0;
+    if (distance == 0) continue;
+    if (distance > 0) {
 
-  t = millis();
-  while (millis() - t < 10) {
-    if (dly == 0) continue;
-    if (error >= 0) {
       digitalWrite(DIR_PIN, HIGH);
       digitalWrite(STEP_PIN, HIGH);
       delayMicroseconds(dly);
       digitalWrite(STEP_PIN, LOW);
       delayMicroseconds(dly);
+
     } else {
+
       digitalWrite(DIR_PIN, LOW);
       digitalWrite(STEP_PIN, HIGH);
       delayMicroseconds(dly);
       digitalWrite(STEP_PIN, LOW);
       delayMicroseconds(dly);
     }
+    n++;
   }
 
 }
 
+float SpeedScrew=0;
+
 void action(int ID,float p1,int p2){
   switch (ID){
-    case 0:{
+    case 0:{x=1000;SpeedScrew=100;
       }break;
     case 1:{
       }break;
-    case 2:{q1=p1;
+    case 2:{xref=p1;SpeedScrew=300;
       }break;
     case 3:{
       }break;
@@ -251,17 +248,45 @@ void action(int ID,float p1,int p2){
   
   }
 
-void loop() {
+void moveQ1(float vel){
 
-  read_serial1();
-  action(ID_action,param1,param2);
-  if (ID_action!=3){
-  control_pos();
+  if (xref < -90) {
+    xref =3;
+    x = 0;
   }
-  else Serial.print("V_control");
 
+  if ((xref - x) > .4) {
+    advance(0.1, vel); // Leer posición y mover husillo
+    x+=0.1;
+  }
+  else if ((xref - x) < -.4) {
+    advance(-.1, vel); // Leer posición y mover husillo
+    x-=0.1;
+  }
+
+  
+  };
+void loop() {
+  
+  //read_serial1();
+  if (Serial.available()>1){
+    Serial.flush();
+    MSG=Serial.readStringUntil('\n');
+    Serial.parseFloat();
+    process_MSG(MSG);
+   }
+
+
+   
+   Serial.print(x);
+   Serial.print(" ");
+   Serial.println(xref);
+      
+  
+  action(ID_action,param1,param2);
+  if(ID_action !=3){
+    moveQ1(SpeedScrew);
+    }
+  
  
-
-
-
 }
