@@ -1,6 +1,5 @@
+#define DEBUG   // Descomentar para generar datos extra pos serial USB, INCOMPATIBLE CON MATLAB
 #include "ENCODERINO.h"  // Clase Encoderino
-
-//#define DEBUG   // Descomentar para generar datos extra pos serial USB, INCOMPATIBLE CON MATLAB
 
 // Referencia a serial y pin del endstop
 Encoderino encoder1(&Serial1, A1); 
@@ -41,7 +40,7 @@ void loop() {
       switch (cmd) {
         
         case 0:                          // Comando de Home
-          encoders[0]->goHome();         // Manda a los motores orden de Home
+          //encoders[0]->goHome();         // Manda a los motores orden de Home
           encoders[1]->goHome();
           encoders[2]->goHome();
 

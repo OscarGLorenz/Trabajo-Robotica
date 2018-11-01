@@ -1,21 +1,15 @@
-#define ENCODERINO 1    // COMPILACIÓN CONDICIONAL, 1,2 o 3. EN UN FUTURO A LA EEPROM
-//#define DEBUG   // Descomentar para generar datos extra pos serial USB
+#define ENCODERINO 2    // COMPILACIÓN CONDICIONAL, 1,2 o 3. EN UN FUTURO A LA EEPROM
+#define DEBUG   // Descomentar para generar datos extra pos serial USB
 
 #include <SPI.h>
+#include "Debug.h"
 
 #define CSN_PIN 11 //Pin slave-select del AS5047D
 #define STEP_PIN 5 //Pin Step del DRV8825
 #define DIR_PIN 4 //Pin Dir del DRV8825
 #define EN_PIN 6 //Pin enable del DRV8825
 
-// Posiciones en el endstop
-#if  ENCODERINO == 1
-#define HOME_ANGLE 0.0
-#elif  ENCODERINO == 2
-#define HOME_ANGLE 100.0
-#elif  ENCODERINO == 3
-#define HOME_ANGLE -120.0
-#endif
+
 
 // Lee el encoder y devuelve en grados la posición
 float leerEncoder()  {
@@ -31,6 +25,7 @@ float leerEncoder()  {
 
   return ((float) angulo) * 0.0219726;
 }
+float homeAngle;
 
 // Diferencia entre ángulos (-180<phi<=180)
 float difAngle(float a, float b) {
@@ -46,11 +41,13 @@ float difAngle(float a, float b) {
   return angulo;
 }
 
-// Obtener el ángulo teniendo en cuenta que se dan varias vueltas
-float getAngle() {
-  static float pastAngleRel = 0;
-  static int nvueltas = 0;
 
+
+// Obtener el ángulo teniendo en cuenta que se dan varias vueltas
+float pastAngleRel = 0;
+int nvueltas = 0;
+  
+float getAngle() {
   float angleRel = leerEncoder();
 
   if ((pastAngleRel >= 0 && pastAngleRel < 10) && (angleRel < 360 && angleRel > 350)) nvueltas += 1;
@@ -58,7 +55,7 @@ float getAngle() {
 
   pastAngleRel = angleRel;
 
-  float fangle = HOME_ANGLE - angleRel;
+  float fangle = angleRel;
   return (fangle + nvueltas * 360) / 5.0;
 }
 
@@ -71,13 +68,12 @@ float speed = 0.0;// Velocidad objetivo
 float ref = 0;    // Posición objetivo
 
 void control_pos() {
+
   Kp = 1.5;
 
   float angle = getAngle();
 
-  //Serial.println(angleRead.raw); // Enviar a simulink la distancia captada
-
-  float error = -ref + angle;
+  float error = ref - angle;
   //calcula la velocidad
   float PID = Kp * error;
 
@@ -86,6 +82,7 @@ void control_pos() {
 
   static unsigned long t = millis();
   while (millis() - t < 10) {
+   
     if (dly == 0) continue;
     if (error >= 0) {
       digitalWrite(DIR_PIN, HIGH);
@@ -101,6 +98,7 @@ void control_pos() {
       delayMicroseconds(dly);
     }
   }
+  t = millis();
 
 }
 
@@ -185,13 +183,26 @@ void advance(float distance, float speedScrew) {
   }
 
 }
+// Posiciones en el endstop
+#if  ENCODERINO == 1
 
-// A donde ir tras el home
-#define AFTER_HOME_1   110.0;
-#define AFTER_HOME_2    45.0;
-#define AFTER_HOME_3   -45.0;
+#define HOME_ANGLE 0.0
+#define AFTER_HOME 110.0
 
+#elif  ENCODERINO == 2
+
+#define HOME_ANGLE 100.0
+#define AFTER_HOME 45.0;
+
+#elif  ENCODERINO == 3
+#define HOME_ANGLE -120.0
+#define AFTER_HOME -45.0;
+#endif
+
+float offset = 0;
 void loop() {
+  Serial1.println(getAngle() + offset);
+  delay(20);
   // Si llega algo por el puerto serie
   if (Serial1.available()) {
     int id = Serial1.parseInt();      // Guardar el ID
@@ -209,17 +220,15 @@ void loop() {
         homing = true;                // Rutina home
         advance(-1000, 80);           // Ir a un extremo
         advance(AFTER_HOME_1, 150);   // Ir a after home
-        ref = AFTER_HOME_1;
+        ref = AFTER_HOME;
         
       #elif ENCODERINO == 2
-        advance(-1000, 10);
-        ref = AFTER_HOME_2;
-        homing = false;
-        
+        homing = true;
+        advance(100000, 20);
+        offset = HOME_ANGLE - getAngle();
+                
       #elif ENCODERINO == 3
-        advance(-1000, 10);
-        ref = AFTER_HOME_3;
-        homing = false;
+
       #endif
         break;
 
@@ -279,7 +288,7 @@ void loop() {
         advance(-0.1, fabs(speed));
     }
   #else
-    control_pos();
+  //  control_pos();
   #endif
 
  // Mandar cada cierto tiempo la referencia actual. En un futuro que sea la posición actual
@@ -289,3 +298,4 @@ void loop() {
    last = millis();
  }
 }
+

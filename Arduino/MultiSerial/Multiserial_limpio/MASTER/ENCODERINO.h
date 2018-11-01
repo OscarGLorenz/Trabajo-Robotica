@@ -33,7 +33,7 @@ class Encoderino {
     }
 
     void disable(void) {
-      serial->println("4");
+      serial->println("3");
     }
 
 
