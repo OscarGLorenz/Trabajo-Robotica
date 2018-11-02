@@ -193,11 +193,11 @@ void control_pos() {
   Serial.print(" ");
   Serial.println(q1);
 
-  Kp = 1.5;
+  Kp =1.5;
 
   angleRead.raw = getAngle();
 
-  //Serial.println(angleRead.raw); // Enviar a simulink la distancia captada
+  Serial.println(angleRead.raw); // Enviar a simulink la distancia captada
 
   error = -q1 + angleRead.raw;
   //calcula la velocidad
@@ -252,16 +252,18 @@ void action(int ID, float p1, int p2) {
 }
 
 void loop() {
-
-  read_serial1();
+  q1=50 ;
+  control_pos();
+  /*read_serial1();
   action(ID_action, param1, param2);
   if (ID_action != 3 && ID_action != 30) {
-    control_pos();
-  }
- // else Serial.print("V_control");
-
-
-
-
-
+    control_pos();*/
+  
+ // else 
+ Serial1.println(angleRead.raw);
 }
+
+
+
+
+//}

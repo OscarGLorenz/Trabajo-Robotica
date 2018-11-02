@@ -81,12 +81,12 @@ float offset = 0;
 
 #define HOME_ANGLE 100.0
 #define AFTER_HOME 45.0;
-float offset = 73+90;
+float offset = 73 + 90;
 
 #elif  ENCODERINO == 3
 #define HOME_ANGLE -110.0
 #define AFTER_HOME -45.0;
-float offset = -120 +30;//-100;
+float offset = -120 + 30; //-100;
 
 #endif
 
@@ -95,7 +95,7 @@ float getAngle() {
 #if ENCODERINO == 1
   float angleRel = leerEncoder();
 #elif ENCODERINO == 2
-  float angleRel = 360.0-leerEncoder();
+  float angleRel = 360.0 - leerEncoder();
 #elif ENCODERINO == 3
   float angleRel = leerEncoder();
 #endif
@@ -118,13 +118,13 @@ void control_pos() {
 
   angleRead = getAngle();
 
-  #if ENCODERINO == 2
+#if ENCODERINO == 2
   error = ref - angleRead;
-  #elif ENCODERINO==3
+#elif ENCODERINO==3
   error = -ref + angleRead;
-  
-  #endif
-  
+
+#endif
+
   //calcula la velocidad
   PID = Kp * error;
 
@@ -213,11 +213,13 @@ void advance(float distance, float speedScrew) {
   }
 
 }
+int id = 0;
+int sentido;
 
 void loop() {
   // Si llega algo por el puerto serie
   if (Serial1.available()) {
-    int id = Serial1.parseInt();      // Guardar el ID
+    id = Serial1.parseInt();      // Guardar el ID
 
     float q;                          // Argumento auxiliar
     switch (id) {
@@ -233,13 +235,13 @@ void loop() {
         nvueltas = 0;
 #elif ENCODERINO == 2
         homing = true;
-        advance(100000, 10*32);
+        advance(100000, 10 * 32);
         nvueltas = -1;
         HomeAngle = getAngle();
         ref = AFTER_HOME;
 #elif ENCODERINO == 3
         homing = true;
-        advance(100000, 5*32);
+        advance(100000, 5 * 32);
         nvueltas = 0;
         HomeAngle = getAngle();
         ref = AFTER_HOME;
@@ -248,7 +250,8 @@ void loop() {
         break;
 
 
-      case 1:                        // Ir a posición
+      case 1:
+      // Ir a posición
         q = Serial1.parseFloat();    // Obtener posición
         Serial1.parseFloat();        // Purgar buffer
 
@@ -266,10 +269,11 @@ void loop() {
         q = Serial1.parseFloat();    // Obtener posición
         Serial1.parseFloat();        // Purgar buffer
 
-
-#if ENCODERINO == 1
         speed = q;
-#endif
+        if (q > 0)  sentido = 1;
+        else if (q < 0) sentido = -1;
+        else sentido = 0;
+
 
         break;
 
@@ -284,27 +288,44 @@ void loop() {
     }
   } // ... end switch
 
-#if ENCODERINO == 1   // Mover el eje lineal si la velocidad no es nula
-  if (fabs(speed) > 0.1) {
-    if (speed > 0)
-      advance(0.1, fabs(speed));
-    else
-      advance(-0.1, fabs(speed));
+
+
+#if ENCODERINO == 1
+  if (fabs(speed) > 0.1 && id == 2) {
+    advance(sentido * 1, fabs(speed) * 60.0 / 8);
+    ref += sentido * 1;
   }
-#else
-  if (homeDonete)
+
+#elif ENCODERINO ==2
+  if (homeDonete && id != 2)
     control_pos();
+  else if (homeDonete) {
+    advance((sentido * 1), fabs(speed)*5*32 / 6);
+    getAngle();
+  }
+
+
+#elif ENCODERINO == 3
+  if (homeDonete && id != 2)
+    control_pos();
+  else if (homeDonete && id == 2) {
+    advance(-(sentido * 1),fabs( speed)*5*32 / 6);
+    getAngle();
+  }
+
+
 #endif
+
+
 
   // Mandar cada cierto tiempo la referencia actual. En un futuro que sea la posición actual
   static long last = millis();
   if ((millis() - last) > 100) {
-    #if ENCODERINO == 1
-      Serial1.println(ref + offset);
-    #else
-      Serial1.println(getAngle());
-    #endif
+#if ENCODERINO == 1
+    Serial1.println(ref + offset);
+#else
+    Serial1.println(getAngle());
+#endif
     last = millis();
   }
 }
-
