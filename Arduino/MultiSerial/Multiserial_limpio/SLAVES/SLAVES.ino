@@ -46,7 +46,7 @@ float difAngle(float a, float b) {
 // Obtener el ángulo teniendo en cuenta que se dan varias vueltas
 float pastAngleRel = 0;
 int nvueltas = 0;
-  
+float HomeAngle = 256;
 float getAngle() {
   float angleRel = leerEncoder();
 
@@ -65,7 +65,7 @@ float Kp = 1.5;
 
 float speed = 0.0;// Velocidad objetivo
 
-float ref = 0;    // Posición objetivo
+float ref = getAngle();    // Posición objetivo
 
 void control_pos() {
 
@@ -84,7 +84,7 @@ void control_pos() {
   while (millis() - t < 10) {
    
     if (dly == 0) continue;
-    if (error >= 0) {
+    if (error <= 0) {
       digitalWrite(DIR_PIN, HIGH);
       digitalWrite(STEP_PIN, HIGH);
       delayMicroseconds(dly);
@@ -131,6 +131,7 @@ void setup() {
 
   digitalWrite(EN_PIN, LOW);  // Encender Driver
   delay(1000);
+
 }
 
 bool homing = false;
@@ -201,8 +202,9 @@ void advance(float distance, float speedScrew) {
 
 float offset = 0;
 void loop() {
-  Serial1.println(getAngle() + offset);
-  delay(20);
+ Serial.println(getAngle() + offset);
+ // delay(100);
+  
   // Si llega algo por el puerto serie
   if (Serial1.available()) {
     int id = Serial1.parseInt();      // Guardar el ID
@@ -224,8 +226,11 @@ void loop() {
         
       #elif ENCODERINO == 2
         homing = true;
-        advance(100000, 20);
+        advance(100000, 120);
+        nvueltas = 0;
+        HomeAngle = leerEncoder();
         offset = HOME_ANGLE - getAngle();
+        ref = AFTER_HOME - offset;
                 
       #elif ENCODERINO == 3
 
@@ -246,7 +251,7 @@ void loop() {
           advance(q-ref, 120);       // Ir al la posición   
           ref = q;                   // Guardar posición nueva
         #else
-          ref = q;
+          ref = q - offset;
         #endif
 
         break;
@@ -288,7 +293,7 @@ void loop() {
         advance(-0.1, fabs(speed));
     }
   #else
-  //  control_pos();
+      control_pos();
   #endif
 
  // Mandar cada cierto tiempo la referencia actual. En un futuro que sea la posición actual
