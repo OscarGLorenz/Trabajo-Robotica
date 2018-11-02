@@ -64,7 +64,7 @@ class Encoderino {
               Serial.println("ENDSTOP");
               #endif
               
-              delay(50);                               // DANGER DANGER DANGER DANGER OJO BLOQUEO PELIGROSO
+             //delay(50);                               // DANGER DANGER DANGER DANGER OJO BLOQUEO PELIGROSO
           }
         }
       }

@@ -42,7 +42,7 @@ void setup() {
   ServoGarra.attach(ServoG);
 }
 void loop() {
-  delay(50);  // DANGER DANGER DANGER DANGER OJO BLOQUEO PELIGROSO
+  //delay(50);  // DANGER DANGER DANGER DANGER OJO BLOQUEO PELIGROSO
 
   // Actualiza encoders, revisa si han chocado con el endstop y si se ha preguntado la posición desde MATLAB
   encoders[0]->update();
@@ -171,5 +171,5 @@ void loop() {
   display.println("Q3: " + String((int) encoders[2]->getPos()) + "  Z: " + String(z));
 
   display.display();
-  delay(20);
+  //delay(20);
 }
