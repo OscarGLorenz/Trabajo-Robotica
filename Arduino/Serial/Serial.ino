@@ -1,8 +1,8 @@
 #include "Sim.h"
 #include "Debug.h"
 NonDynamicSystem q1(20,0);
-NonDynamicSystem q2(2,M_PI_4);
-NonDynamicSystem q3(2,-M_PI_4);
+NonDynamicSystem q2(10,45);
+NonDynamicSystem q3(10,-45);
 
 
 void setup() {
@@ -25,9 +25,9 @@ void loop() {
       int cmd = Serial.parseInt();
       switch (cmd) {
         case 0:
-        q1.goPos(0);
-        q2.goPos(-M_PI_4);
-        q3.goPos(M_PI_4);
+        q1.goPos(110);
+        q2.goPos(45);
+        q3.goPos(-45);
           break;
 
         case 1:
