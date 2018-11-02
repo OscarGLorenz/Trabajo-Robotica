@@ -19,7 +19,7 @@ class Encoderino {
 
     // ORDENES
     void goHome(void) {
-      serial->println("0");
+      serial->println("5"); //Era un "0"
     }
 
     void goPos(float q) {
@@ -100,4 +100,3 @@ class Encoderino {
     long debounceTime = 0;     // Marca temporal del último flanco
     int buttonState = LOW;     // Estado del endstop
 };
-

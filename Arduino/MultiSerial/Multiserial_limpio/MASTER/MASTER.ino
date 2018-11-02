@@ -19,7 +19,6 @@ void setup() {
   encoders[1]->init();
   encoders[2]->init();
 }
-
 void loop() {
   delay(50);  // DANGER DANGER DANGER DANGER OJO BLOQUEO PELIGROSO
 
@@ -110,4 +109,3 @@ void loop() {
     }
   }
 }
-
