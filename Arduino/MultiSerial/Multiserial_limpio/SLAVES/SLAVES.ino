@@ -1,4 +1,4 @@
-#define ENCODERINO 2  // COMPILACIÓN CONDICIONAL, 1,2 o 3. EN UN FUTURO A LA EEPROM
+#define ENCODERINO 1  // COMPILACIÓN CONDICIONAL, 1,2 o 3. EN UN FUTURO A LA EEPROM
 #define LOBOTOMIA LOW
 #include <SPI.h>
 
@@ -173,11 +173,18 @@ void advance(float distance, float speedScrew) {
   nstep = fabs((distance / 8.0) * 200);
 
   unsigned long dly;
-
-  if (speedScrew == 0) dly = 0;
-
   // tengo que calcular la velocidad lineal ahora tengo velocidad angular
   dly = fabs((1.0 / (speedScrew / 60.0 * 200.0 ) / 2.0) * 1e6);
+
+  #ifdef ENCODERINO == 1
+    nstep *= 8;
+    dly /= 8;
+  #endif
+  
+  if (fabs(speedScrew) < 10e-3) {
+    dly = 0; 
+    nstep = -1;
+  }
 
   while (n <= nstep) {
     // Si llega un ID=30 significa que se ha tocado el endstop
@@ -292,7 +299,7 @@ void loop() {
 
 #if ENCODERINO == 1
   if (fabs(speed) > 0.1 && id == 2) {
-    advance(sentido * 1, fabs(speed) * 60.0 / 8);
+    advance(sentido * 1, fabs(speed) * 60.0 / 8.0);
     ref += sentido * 1;
   }
 
