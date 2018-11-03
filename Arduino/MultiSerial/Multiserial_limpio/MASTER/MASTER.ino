@@ -1,11 +1,14 @@
-#define DEBUG   // Descomentar para generar datos extra pos serial USB, INCOMPATIBLE CON MATLAB
 #include "ENCODERINO.h"  // Clase Encoderino
 #include <Wire.h>
 #include <Servo.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+
 #define ServoG A0
+
 #define OLED_RESET 4
+
+// Pines del puente H
 #define PWMA 8
 #define AIN1 9
 #define AIN2 10
@@ -13,8 +16,24 @@
 #define BIN2 12
 #define PWMB 13
 
+// Pines del encoder
+#define ENCODER_1 2
+#define ENCODER_2 3
+#define ENCODER_SW 4
+
+volatile long int encoder = 0;
+void isr() {
+  if (digitalRead(ENCODER_2)) {
+    encoder--;
+  } else {
+    encoder++;
+  }
+}
+
 Adafruit_SSD1306 display(OLED_RESET);
+
 Servo ServoGarra;
+unsigned long clawUntilMillis = 0;  // Tiempo funcionamiento de la garra
 
 // Referencia a serial y pin del endstop
 Encoderino encoder1(&Serial1, A1);
@@ -40,9 +59,11 @@ void setup() {
   encoders[2]->init();
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   ServoGarra.attach(ServoG);
+
+  attachInterrupt(digitalPinToInterrupt(ENCODER_1), isr, RISING); // Flanco bajada en el encoder
 }
+
 void loop() {
-  //delay(50);  // DANGER DANGER DANGER DANGER OJO BLOQUEO PELIGROSO
 
   // Actualiza encoders, revisa si han chocado con el endstop y si se ha preguntado la posición desde MATLAB
   encoders[0]->update();
@@ -66,10 +87,6 @@ void loop() {
           encoders[2]->goHome();
           ServoGarra.write(90);
 
-#ifdef DEBUG                   // Debug muestra motor y orden
-          Serial.print(motor);
-          Serial.println(": 0");
-#endif
           break;
 
 
@@ -84,11 +101,6 @@ void loop() {
             encoders[motor - 1]->goPos(q); // Manda el motor correspondiente a la posición
           }
 
-#ifdef DEBUG                   // Debug muestra motor y orden
-          Serial.print(motor);
-          Serial.print(": 1 ");
-          Serial.println(q);
-#endif
           break;
 
 
@@ -99,11 +111,6 @@ void loop() {
 
           encoders[motor - 1]->speed(q); // Manda el motor correspondiente a una velocidad
 
-#ifdef DEBUG                   // Debug muestra motor y orden
-          Serial.print(motor);
-          Serial.print(": 2 ");
-          Serial.println(q);
-#endif
           break;
 
 
@@ -112,10 +119,6 @@ void loop() {
           encoders[1]->disable();
           encoders[2]->disable();
 
-#ifdef DEBUG                   // Debug muestra motor y orden
-          Serial.print(motor);
-          Serial.println(": 3");
-#endif
           break;
 
 
@@ -123,19 +126,23 @@ void loop() {
           Serial.read();  Serial.read(); // Eliminar " M" del buffer
           motor = Serial.parseInt();     // Guarda el motor al que va destinada la orden
           q = Serial.parseFloat();       // Guarda la posición a la que debe ir el motor
-          if (motor == 1) {              //Garra
-
+          if (motor == 1) { //Garra
+            clawUntilMillis = fabs(q) + millis();
+            if (q > 0) {
+              analogWrite(PWMB,255);
+              digitalWrite(BIN1,HIGH);
+              digitalWrite(BIN2,LOW);
+            } else {
+              analogWrite(PWMB,255);
+              digitalWrite(BIN1,LOW);
+              digitalWrite(BIN2,HIGH);            
+            }
           } else if (motor == 2) {        //Bomba
             digitalWrite(AIN1, HIGH);
             digitalWrite(AIN2, LOW);
             analogWrite(PWMA, fabs(q));
           }
 
-#ifdef DEBUG                   // Debug muestra motor y orden
-          Serial.print(motor);
-          Serial.print(": 4 ");
-          Serial.println(q);
-#endif
           break;
 
 
@@ -156,7 +163,54 @@ void loop() {
     }
   }
 
-  // Clear the buffer.
+
+
+  /********GARRA********/
+  if (clawUntilMillis < millis()) {
+    analogWrite(PWMB,0);
+    digitalWrite(BIN1,LOW);
+    digitalWrite(BIN2,LOW);  
+  }
+  /********GARRA********/
+
+
+//  /********ENCODER********/
+//  static bool read = 0;
+//  read = digitalRead(ENCODER_SW);
+//  static bool oldRead = 0;
+//  static bool rising = false;
+//  static long int timeLast;
+//  bool NOguiado = false;
+//  
+//  if (read && !oldRead) {
+//    timeLast = millis();
+//    rising = true;
+//  }
+//
+//  if ((millis() - timeLast) >= 80 && read && rising && millis() > 2000) {
+//    NOguiado = !NOguiado;
+//    rising = false;
+//
+//    encoders[1]->disable();
+//    encoders[2]->disable();
+//  }
+//
+//  oldRead = read;
+//
+//  if (!NOguiado && encoder != 0) {
+//    static float pos = encoders[0]->getPos();
+//    pos = encoders[0]->getPos() + encoder;
+//    encoder = 0;
+//    if (pos > 0 && pos < 180)
+//      encoders[0]->goPos(pos);
+//    Serial.println(pos);
+//  }
+//  /********ENCODER********/
+
+
+
+  
+  /********OLED********/
   display.clearDisplay();
 
   display.setTextSize(1);
@@ -166,10 +220,12 @@ void loop() {
   int y = 300 * (cos(encoders[1]->getPos() * M_PI / 180.0) + cos(encoders[2]->getPos() * M_PI / 180.0));
   int z = 300 * (sin(encoders[1]->getPos() * M_PI / 180.0) + sin(encoders[2]->getPos() * M_PI / 180.0));
 
-  display.println("Q1: " + String((int) encoders[0]->getPos()) + "  X: " + String(x));
-  display.println("Q2: " + String((int) encoders[1]->getPos()) + "  Y: " + String(y));
-  display.println("Q3: " + String((int) encoders[2]->getPos()) + "  Z: " + String(z));
+  display.println("Q1: " + String((int) encoders[0]->getPos()) + "mm  X: " + String(x) + "mm");
+  display.println("Q2: " + String((int) encoders[1]->getPos()) + "deg Y: " + String(y) + "mm");
+  display.println("Q3: " + String((int) encoders[2]->getPos()) + "deg Z: " + String(z) + "mm");
+  display.println("Q4: " + String((int) ServoGarra.read()) + "deg");
 
   display.display();
-  //delay(20);
+  /********OLED********/
+
 }
