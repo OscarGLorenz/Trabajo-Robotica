@@ -1,4 +1,4 @@
-#define ENCODERINO 3  // COMPILACIÓN CONDICIONAL, 1,2 o 3. EN UN FUTURO A LA EEPROM
+#define ENCODERINO 2  // COMPILACIÓN CONDICIONAL, 1,2 o 3. EN UN FUTURO A LA EEPROM
 #define LOBOTOMIA LOW
 #include <SPI.h>
 
@@ -80,8 +80,8 @@ float offset = 0;
 #elif  ENCODERINO == 2
 
 #define HOME_ANGLE 100.0
-#define AFTER_HOME 45.0;
-float offset = 73 + 90;
+#define AFTER_HOME 40.0;
+float offset = +123+110-63;//73 + 90;
 
 #elif  ENCODERINO == 3
 #define HOME_ANGLE -110.0
