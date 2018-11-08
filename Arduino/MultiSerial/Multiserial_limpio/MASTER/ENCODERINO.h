@@ -36,6 +36,9 @@ class Encoderino {
       serial->println("3");
     }
 
+    void write(String str) {
+      serial->println(str);
+    }
 
     // Endstop con anti-rebotes
     void update(void) {
