@@ -144,7 +144,12 @@ void loop() {
           }
 
           break;
+          
+        case 5:                          // Interpolación con splines
+          Serial.read();  Serial.read(); // Eliminar " M" del buffer
+          motor = Serial.parseInt();     // Guarda el motor al que va destinada la orden
 
+          encoders[motor-1]->write(String(motor) + " " + Serial.readStringUntil('\n'));
 
         case 20:                         // Comando para pedir posición
           Serial.read(); Serial.read();  // Eliminar " M" del buffer
