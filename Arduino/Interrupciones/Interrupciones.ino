@@ -1,6 +1,9 @@
+#define DIVIDER 4
+
 boolean toggle2 = 0;
 volatile unsigned long int counter = 0;
 long int timer=0;
+int freq_divider=0;
 
 void increase(){
   counter++;
@@ -30,12 +33,22 @@ void setup() {
 ISR(TIMER2_COMPA_vect) {                      //timer1 interrupt toggles pin 9
   //generates pulse wave of frequency/2 (takes two cycles for full wave- toggle high then toggle low)
   if (toggle2) {
-    DDRB|=B00000010;      //digitalWrite(9, HIGH);
+    if(freq_divider==0){
+    PORTB=B00000010;      
+    digitalWrite(9, HIGH);
     toggle2 = 0;
+    freq_divider=DIVIDER;
+    }
+    else freq_divider --;
   }
   else {
-    DDRB&=~B00000010;     //digitalWrite(9, LOW);
+    if(freq_divider==0){
+    PORTB&=~B00000010;
+    //digitalWrite(9, LOW);
     toggle2 = 1;
+    freq_divider=DIVIDER;
+    }
+    else freq_divider--;
   }
 }
 
