@@ -16,7 +16,7 @@ float error, Kp, PID;
 
 float abs_angle;
 float pastAngleRel = 0;
-float HomeAngle = 256 ;
+float HomeAngle = 0;
 int nvueltas = 0;
 
 float ref = 20;
@@ -129,12 +129,12 @@ float offset = 0;
 
 #elif  ENCODERINO == 2
 
-#define HOME_ANGLE 100.0
+#define HOME_ANGLE 117.0
 #define AFTER_HOME 45.0;
 float offset = 73+90;
 
 #elif  ENCODERINO == 3
-#define HOME_ANGLE -110.0
+#define HOME_ANGLE -114.0
 #define AFTER_HOME -45.0;
 float offset = -120 + 30; //-100;
 
@@ -145,18 +145,18 @@ float getAngle() {
 #if ENCODERINO == 1
   float angleRel = leerEncoder();
 #elif ENCODERINO == 2
-  float angleRel = 360.0 - leerEncoder();
-#elif ENCODERINO == 3
   float angleRel = leerEncoder();
+#elif ENCODERINO == 3
+  float angleRel = 360-leerEncoder();
 #endif
 
-  if ((pastAngleRel >= 0 && pastAngleRel < 10) && (angleRel < 360 && angleRel > 350)) nvueltas += 1;
-  else if ((pastAngleRel < 360 && pastAngleRel > 350) && (angleRel >= 0 && angleRel < 10)) nvueltas -= 1;
+  if ((pastAngleRel >= 0 && pastAngleRel < 50) && (angleRel <= 360 && angleRel > 320)) nvueltas -= 1;
+  else if ((pastAngleRel <= 360 && pastAngleRel > 320) && (angleRel >= 0 && angleRel < 50)) nvueltas += 1;
 
   pastAngleRel = angleRel;
 
-  float fangle = HomeAngle - angleRel;
-  return ((fangle + nvueltas * 360) / 5.0) + offset;
+  float fangle = (angleRel-HomeAngle) + nvueltas * 360;
+  return (HOME_ANGLE + fangle/5);
 }
 
 
@@ -281,7 +281,7 @@ void loop() {
     float q;                          // Argumento auxiliar
     switch (id) {
       //case 0:// Ir al Home
-      case 0:
+      case 50:
         Serial1.parseInt();             // Purga el buffer
 
 #if   ENCODERINO == 1
@@ -293,14 +293,14 @@ void loop() {
 #elif ENCODERINO == 2
         homing = true;
         advance(100000, 10 * 32);
-        nvueltas = -1;
-        HomeAngle = getAngle();
+        nvueltas = 0;
+        HomeAngle = leerEncoder();
         ref = AFTER_HOME;
 #elif ENCODERINO == 3
         homing = true;
         advance(100000, 5 * 32);
         nvueltas = 0;
-        HomeAngle = getAngle();
+        HomeAngle = 360-leerEncoder();
         ref = AFTER_HOME;
 #endif
         homeDonete = true;
@@ -388,4 +388,3 @@ void loop() {
     last = millis();
   }
 }
-
