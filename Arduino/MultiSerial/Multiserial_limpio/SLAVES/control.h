@@ -1,5 +1,14 @@
 #ifndef CONTROL_H_
 #define CONTROL_H_
+
+// Espera sin bloqueo, uso: NOBLOCK_DELAY(sentencias,tiempo en ms)
+#define CONCAT(x,y) x ## y
+#define EVAL(x,y)  CONCAT(x,y)
+#define DELAY_VAR  EVAL(DELAY,LINE)
+#define NOBLOCK_DELAY(f,t) static long DELAY_VAR = millis(); if (millis() - DELAY_VAR  > t) { f DELAY_VAR = millis();}
+#define DEBUG(x) Serial1.println(String(#x) + " = " + String(x));
+
+
 #include "Encoder.h"
 
 #define ZM 1 //zona muerta
@@ -45,23 +54,23 @@ float difAngle(float a, float b) {
 }
 
 float getAngle() {
-  #if ENCODERINO == 1
-    float angleRel = encoder.leerEncoder();
-  #elif ENCODERINO == 2
-    float angleRel = encoder.leerEncoder();
-  #elif ENCODERINO == 3
-    float angleRel = 360 - encoder.leerEncoder();
-  #endif
+#if ENCODERINO == 1
+  float angleRel = encoder.leerEncoder();
+#elif ENCODERINO == 2
+  float angleRel = encoder.leerEncoder();
+#elif ENCODERINO == 3
+  float angleRel = 360 - encoder.leerEncoder();
+#endif
 
-  if ((pastAngleRel >= 0 && pastAngleRel < 50) && (angleRel <= 360 && angleRel > 320)) 
+  if ((pastAngleRel >= 0 && pastAngleRel < 50) && (angleRel <= 360 && angleRel > 320))
     nvueltas -= 1;
-  else if ((pastAngleRel <= 360 && pastAngleRel > 320) && (angleRel >= 0 && angleRel < 50)) 
+  else if ((pastAngleRel <= 360 && pastAngleRel > 320) && (angleRel >= 0 && angleRel < 50))
     nvueltas += 1;
 
-   pastAngleRel = angleRel;
+  pastAngleRel = angleRel;
 
-    float fangle = (angleRel - HomeAngle) + nvueltas * 360;
-    return (HOME_ANGLE + fangle / 5);
+  float fangle = (angleRel - HomeAngle) + nvueltas * 360;
+  return (HOME_ANGLE + fangle / 5);
 }
 
 
@@ -74,11 +83,11 @@ void control_pos() {
 
   angleRead = getAngle();
 
-  #if ENCODERINO == 2
-    error = ref - angleRead;
-  #elif ENCODERINO==3
-    error = -ref + angleRead;
-  #endif
+#if ENCODERINO == 2
+  error = ref - angleRead;
+#elif ENCODERINO==3
+  error = -ref + angleRead;
+#endif
 
   //calcula la velocidad
   PID = Kp * error;
@@ -92,28 +101,28 @@ void control_pos() {
     if (dly == 0) continue;
 
     bool cond;
-  #if ENCODERINO == 1
+#if ENCODERINO == 1
     cond = (error <= 0);
-  #elif ENCODERINO == 2
+#elif ENCODERINO == 2
     cond = (error >= 0);
-  #elif ENCODERINO == 3
+#elif ENCODERINO == 3
     cond = (error >= 0);
-  #endif
+#endif
 
-  if (cond) {
-    digitalWrite(DIR_PIN, HIGH);
-    digitalWrite(STEP_PIN, HIGH);
-    delayMicroseconds(dly);
-    digitalWrite(STEP_PIN, LOW);
-    delayMicroseconds(dly);
-  } else {
-    digitalWrite(DIR_PIN, LOW);
-    digitalWrite(STEP_PIN, HIGH);
-    delayMicroseconds(dly);
-    digitalWrite(STEP_PIN, LOW);
-    delayMicroseconds(dly);
-   }
- }
+    if (cond) {
+      digitalWrite(DIR_PIN, HIGH);
+      digitalWrite(STEP_PIN, HIGH);
+      delayMicroseconds(dly);
+      digitalWrite(STEP_PIN, LOW);
+      delayMicroseconds(dly);
+    } else {
+      digitalWrite(DIR_PIN, LOW);
+      digitalWrite(STEP_PIN, HIGH);
+      delayMicroseconds(dly);
+      digitalWrite(STEP_PIN, LOW);
+      delayMicroseconds(dly);
+    }
+  }
 }
 
 bool homing = false;
@@ -174,8 +183,58 @@ void advance(float distance, float speedScrew) {
   }
 
 }
+
+
+float advanceSpline(float dt) {
+  float t = (millis() - spline.getStart()) / 1000.0;
+  float s = (spline.evaluate(t + dt) - spline.evaluate(t));
+  float v = s / dt;
+ 
+  long int nstep, n;
+  n = 0;
+  //una vuelta son 200 pasos y avanza 8 mm
+  nstep = fabs((s / 8.0) * 200);
+  unsigned long dly;
+  // tengo que calcular la velocidad lineal ahora tengo velocidad angular
+
+  dly = fabs((1.0 / (v / 60.0 * 200.0 ) / 2.0) * 1e6)/9;
+
+#ifdef ENCODERINO == 1
+  nstep *= 8;
+  dly /= 8;
+#endif
+
+  if (fabs(v) < 10e-3) {
+    dly = 0;
+    nstep = -1;
+  }
+  
+    while (n <= nstep) {      
+      if (s == 0) continue;
+      if (s > 0) {
+        digitalWrite(DIR_PIN, HIGH);
+        digitalWrite(STEP_PIN, HIGH);
+        delayMicroseconds(dly);
+        digitalWrite(STEP_PIN, LOW);
+        delayMicroseconds(dly);
+      } else {
+        digitalWrite(DIR_PIN, LOW);
+        digitalWrite(STEP_PIN, HIGH);
+        delayMicroseconds(dly);
+        digitalWrite(STEP_PIN, LOW);
+        delayMicroseconds(dly);
+      }
+      n++;
+    }
+   
+   
+  
+    return spline.evaluate(t);
+}
+
+
+
 int id = 0;
 int sentido;
 
 #endif
-

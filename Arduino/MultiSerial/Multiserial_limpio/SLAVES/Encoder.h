@@ -30,7 +30,7 @@ void init(void) {
 void enable(bool en) {
   digitalWrite(EN_PIN, en);  // Encender Driver;
 }
-void togglEnable() {
+void toggleEnable() {
    digitalWrite(EN_PIN, !digitalRead(EN_PIN));
 }
 

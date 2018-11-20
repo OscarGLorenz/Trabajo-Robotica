@@ -1,4 +1,4 @@
-#define ENCODERINO 2  // COMPILACIÓN CONDICIONAL, 1,2 o 3. EN UN FUTURO A LA EEPROM
+#define ENCODERINO 3  // COMPILACIÓN CONDICIONAL, 1,2 o 3. EN UN FUTURO A LA EEPROM
 #define LOBOTOMIA LOW
 
 #include "spline.h"
@@ -7,9 +7,9 @@
 
 void setup() {
   encoder.init();
-
+  pinMode(13,OUTPUT);
   Serial1.begin(115200);     // Comunicación Serial a 115200 Baudios
-  Serial1.setTimeout(10);    // Timeout de 5ms
+  Serial1.setTimeout(30);    // Timeout de 5ms
 
   encoder.enable(LOBOTOMIA);
 }
@@ -21,12 +21,7 @@ void loop() {
 
     float q;                          // Argumento auxiliar
     switch (id) {
-	
-	
-
-
       /* RUTINA DE HOMING */
-      //case 0:// Ir al Home
       case 50:
         Serial1.parseInt();             // Purga el buffer
         spline.active = false;
@@ -39,13 +34,14 @@ void loop() {
           nvueltas = 0;
 	#elif ENCODERINO == 2
           homing = true;
-          advance(100000, 7 * 32);
+          advance(100000, 4 * 32);
           nvueltas = 0;
           HomeAngle = encoder.leerEncoder();
           ref = AFTER_HOME;
         #elif ENCODERINO == 3
           homing = true;
-          advance(100000, 5 * 32);
+          delay(2000);
+          advance(100000, 2 * 32);
           nvueltas = 0;
           HomeAngle = 360 - encoder.leerEncoder();
           ref = AFTER_HOME;
@@ -100,7 +96,7 @@ void loop() {
         spline.active = false;
 
         // Toggle al pin del enable
-        encoider
+        encoder.toggleEnable();
 
         break;
       /* DESHABILITAR STEPPER */
@@ -110,7 +106,7 @@ void loop() {
       /* INTERPOLACIÓN POR SPLINES*/
       case 5:
         spline.loadSpline();
-	break;
+	      break;
       /* INTERPOLACIÓN POR SPLINES*/
 
     } // ... end switch
@@ -135,23 +131,37 @@ void loop() {
       control_pos();
     else if (homeDonete && id == 2) {
       advance(-(sentido * 1), fabs( speed) * 5 * 32 / 6);
-      getAngle()
+      getAngle();
     }
   #endif
   /* CONTROL DE VELOCIDAD Y HOMING */
 
-
+  static float dt=0.01;
   /* ACTUALIZAR REFERENCIA CON LAS SPLINES */	
-  if (spline.active)
-    ref = spline.evaluate();
+  if (!spline.stop(millis()/1000.0+dt)) {
+    
+  #if ENCODERINO == 1
+      ref = advanceSpline(dt);   
+     
+      // Ir al la posición
+  #else
+      digitalWrite(13,!digitalRead(13));
+      
+      ref = spline.evaluate((millis()-spline.getStart())/1000.0);
+  
+  
+  #endif
+  }
 
   // Mandar cada cierto tiempo la referencia actual
   static long last = millis();
   if ((millis() - last) > 100) {
   #if ENCODERINO == 1
-    Serial1.println(ref + offset);
+    Serial1.println(ref);
   #else
     Serial1.println(getAngle());
+    //Serial1.println(ref);
+    
   #endif
     last = millis();
   }
