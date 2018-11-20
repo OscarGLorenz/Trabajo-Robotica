@@ -7,7 +7,7 @@
 #define ServoG A0
 
 #define OLED_RESET 4
-
+String coza;
 // Pines del puente H
 #define PWMA 8
 #define AIN1 9
@@ -61,10 +61,11 @@ void setup() {
   ServoGarra.attach(ServoG);
 
   attachInterrupt(digitalPinToInterrupt(ENCODER_1), isr, RISING); // Flanco bajada en el encoder
+
 }
 
 void loop() {
-
+    
   // Actualiza encoders, revisa si han chocado con el endstop y si se ha preguntado la posición desde MATLAB
   encoders[0]->update();
   encoders[1]->update();
@@ -86,7 +87,6 @@ void loop() {
           encoders[1]->goHome();
           encoders[2]->goHome();
           ServoGarra.write(90);
-
           break;
 
 
@@ -148,9 +148,11 @@ void loop() {
         case 5:                          // Interpolación con splines
           Serial.read();  Serial.read(); // Eliminar " M" del buffer
           motor = Serial.parseInt();     // Guarda el motor al que va destinada la orden
-
-          encoders[motor-1]->write(String(motor) + " " + Serial.readStringUntil('\n'));
-
+          Serial.read();
+          encoders[motor-1]->write(String("5 ") + Serial.readStringUntil('\n'));
+          //Serial.println(String("5 ") + Serial.readStringUntil('\n'));
+          break;
+          
         case 20:                         // Comando para pedir posición
           Serial.read(); Serial.read();  // Eliminar " M" del buffer
           motor = Serial.parseInt();     // Coger motor
@@ -167,6 +169,8 @@ void loop() {
       }
     }
   }
+
+
 
 
 
