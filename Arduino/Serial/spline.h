@@ -32,19 +32,17 @@ void loadSpline(void) {
  }
 
 float evaluate(void) {
-  
-
+if (millis() / 1000.0 > start / 1000.0 + t[interval + 1])
+    interval++;
 
   float time = (millis() - start) / 1000.0;
-  if (time > t[n]) {
-    active = false;
-  } else if (time > t[interval + 1])
-    interval++;
-    
-  return a[interval] +
-         b[interval] * (time - t[interval]) +
-         c[interval] * (time - t[interval]) * (time - t[interval]) +
-         d[interval] * (time - t[interval]) * (time - t[interval]) * (time - t[interval]);
+  if (time > t[n])
+    active = true;
+    return a[interval] +
+           b[interval] * (time - t[interval]) +
+           c[interval] * (time - t[interval]) * (time - t[interval]) +
+           d[interval] * (time - t[interval]) * (time - t[interval]) * (time - t[interval]);
+
 }
 
 private:

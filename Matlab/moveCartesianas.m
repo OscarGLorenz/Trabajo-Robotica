@@ -18,6 +18,9 @@ t = linspace(0,T,p);
 % Cinemática inversa de los puntos
 [q1,q2,q3] = inversa(x1,x2,x3);
 
+q2 = rad2deg(q2);
+q3 = rad2deg(q3);
+
 % Obtener los polinomios para coordenada articular con pendiente nula al
 % principio y al final
 pp1 = spline(t,[0 q1 0]);
@@ -36,33 +39,33 @@ mandarComando(app,sprintf('J5 M%d %d%s\n',3,p-1,str3));
 
 %Como hacer una gráfica de los resultados
 
-% % Gráficas q-t
-% figure
-% tt = linspace(0,T);
-% subplot(3,1,1);
-% plot(t,q1,'o',tt,ppval(pp1,tt),'-'); 
-% xlabel('t [s]');
-% ylabel('q1 [mm]');
-% grid on
-% 
-% subplot(3,1,2);
-% plot(t,q2,'o',tt,ppval(pp2,tt),'-');
-% xlabel('t [s]');
-% ylabel('q2 [deg]');
-% grid on
-% 
-% subplot(3,1,3);
-% plot(t,q3,'o',tt,ppval(pp3,tt),'-');
-% xlabel('t [s]');
-% ylabel('q3 [deg]');
-% grid on
-% 
-% % Gráficas xyz con puntos de interpolación
-% figure
-% [x,y,z] = directa(ppval(pp1,tt),ppval(pp2,tt),ppval(pp3,tt));
-% plot3(x,y,z,'-b'); hold on
-% plot3(x1,x2,x3,'or');
-% grid on
+% Gráficas q-t
+figure
+tt = linspace(0,T);
+subplot(3,1,1);
+plot(t,q1,'o',tt,ppval(pp1,tt),'-'); 
+xlabel('t [s]');
+ylabel('q1 [mm]');
+grid on
+
+subplot(3,1,2);
+plot(t,q2,'o',tt,ppval(pp2,tt),'-');
+xlabel('t [s]');
+ylabel('q2 [deg]');
+grid on
+
+subplot(3,1,3);
+plot(t,q3,'o',tt,ppval(pp3,tt),'-');
+xlabel('t [s]');
+ylabel('q3 [deg]');
+grid on
+
+% Gráficas xyz con puntos de interpolación
+figure
+[x,y,z] = directa(ppval(pp1,tt),deg2rad(ppval(pp2,tt)),deg2rad(ppval(pp3,tt)));
+plot3(x,y,z,'-b'); hold on
+plot3(x1,x2,x3,'or');
+grid on
 
 end
 
