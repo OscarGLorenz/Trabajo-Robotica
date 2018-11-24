@@ -1,3 +1,4 @@
+
 #include "ENCODERINO.h"  // Clase Encoderino
 #include <Wire.h>
 #include <Servo.h>
@@ -71,6 +72,28 @@ void loop() {
   encoders[1]->update();
   encoders[2]->update();
 
+  static unsigned long eachWrite = millis();
+  if (millis() - eachWrite > 200) {
+          char cmd[40] = {0};                  // Se manda la posición con formato %3.3f
+          
+          float q1 = encoders[0]->getPos(); // Obtención de la posición
+          float q2 = encoders[1]->getPos(); // Obtención de la posición
+          float q3 = encoders[2]->getPos(); // Obtención de la posición
+          char aux1[10];dtostrf(q1, 3, 3, aux1); 
+          char aux2[10];dtostrf(q2, 3, 3, aux2); 
+          char aux3[10];dtostrf(q3, 3, 3, aux3); 
+
+          strcat(cmd,aux1);
+          strcat(cmd," ");
+          strcat(cmd,aux2);
+          strcat(cmd," ");
+          strcat(cmd,aux3);
+          strcat(cmd," ");
+
+          Serial.println(cmd);
+
+          eachWrite = millis();
+  }
   // Si llegan ordenes de MATLAB
   if (Serial.available()) {
     char jcode = Serial.read();          // Guarda la J o lo que sea
@@ -146,25 +169,25 @@ void loop() {
           break;
           
         case 5:                          // Interpolación con splines
-          Serial.read();  Serial.read(); // Eliminar " M" del buffer
-          motor = Serial.parseInt();     // Guarda el motor al que va destinada la orden
-          Serial.read();
-          encoders[motor-1]->write(String("5 ") + Serial.readStringUntil('\n'));
-          //Serial.println(String("5 ") + Serial.readStringUntil('\n'));
+          Serial.read();          
+          encoders[0]->write(String("5 ") + Serial.readStringUntil('_'));
+          encoders[1]->write(String("5 ") + Serial.readStringUntil('_'));
+          encoders[2]->write(String("5 ") + Serial.readStringUntil('_'));
+
           break;
           
-        case 20:                         // Comando para pedir posición
-          Serial.read(); Serial.read();  // Eliminar " M" del buffer
-          motor = Serial.parseInt();     // Coger motor
-
-          q = encoders[motor - 1]->getPos(); // Obtención de la posición
-
-          char str[30];                  // Se manda la posición con formato %3.3f
-          Serial.print("D1 M");
-          Serial.print(motor);
-          Serial.print(" ");
-          Serial.println(dtostrf(q, 3, 3, str));
-          break;
+//        case 20:                         // Comando para pedir posición
+//          Serial.read(); Serial.read();  // Eliminar " M" del buffer
+//          motor = Serial.parseInt();     // Coger motor
+//
+//          q = encoders[motor - 1]->getPos(); // Obtención de la posición
+//
+//          char str[30];                  // Se manda la posición con formato %3.3f
+//          Serial.print("D1 M");
+//          Serial.print(motor);
+//          Serial.print(" ");
+//          Serial.println(dtostrf(q, 3, 3, str));
+//          break;
 
       }
     }

@@ -21,6 +21,27 @@ Spline sp3;
 
 
 void loop() {
+  static unsigned long eachWrite = millis();
+  if (millis() - eachWrite > 200) {
+          char cmd[40] = {0};                  // Se manda la posición con formato %3.3f
+          
+          char aux1[10];dtostrf(q1.evaluate(), 3, 3, aux1); 
+          char aux2[10];dtostrf(q2.evaluate(), 3, 3, aux2); 
+          char aux3[10];dtostrf(q3.evaluate(), 3, 3, aux3); 
+
+          strcat(cmd,aux1);
+          strcat(cmd," ");
+          strcat(cmd,aux2);
+          strcat(cmd," ");
+          strcat(cmd,aux3);
+          strcat(cmd," ");
+
+          Serial.println(cmd);
+
+          eachWrite = millis();
+  }
+
+  
   if (Serial.available() > 0) {
     char jcode = Serial.read();
     int motor;
@@ -72,41 +93,28 @@ void loop() {
           break;
           
         case 5:
-          Serial.read(); Serial.read();  // Eliminar " M" del buffer
-          motor = Serial.parseInt();
-          if (motor == 1) {
-            sp1.loadSpline();
-          } else if (motor == 2) {
-            sp2.loadSpline();
-          } else if (motor == 3) {
-            sp3.loadSpline();
-          }
+          Serial.read();
+
+          String str1 = Serial.readStringUntil('_');
+          String str2 = Serial.readStringUntil('_');
+          String str3 = Serial.readStringUntil('_');
+
+          sp1.loadSpline(str1);
+          sp2.loadSpline(str2);
+          sp3.loadSpline(str3);
           break;
   
-        case 20:
-          Serial.read(); Serial.read(); // Eliminar " M" del buffer
-          motor = Serial.parseInt(); // Coger motor
-          if (motor == 1) {
-            q = q1.evaluate();
-          } else if (motor == 2) {
-            q = q2.evaluate();
-          } else if (motor == 3) {
-            q = q3.evaluate();
-          }
-          char s[30];
-          Serial.print("D1 M"); Serial.print(motor); Serial.print(" "); Serial.println(dtostrf(q, 3, 3, s));
-          
-          break;
       }
     }
   }
 }
 
 SIGNAL(TIMER0_COMPA_vect) {
-        if (millis()%5==1) {
-            if (sp1.active) q1.goPos(sp1.evaluate());
-            if (sp2.active) q2.goPos(sp2.evaluate());
-            if (sp3.active) q3.goPos(sp3.evaluate());
+        if (millis()%100==1) {
+            float now = (millis() - sp1.getStart())/1000.0;
+            if (!sp1.stop()) q1.goPos(sp1.evaluate(now));
+            if (!sp2.stop()) q2.goPos(sp2.evaluate(now));
+            if (!sp3.stop()) q3.goPos(sp3.evaluate(now));
         }
 
 

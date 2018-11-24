@@ -11,7 +11,7 @@
 
 #include "Encoder.h"
 
-#define ZM 1 //zona muerta
+#define ZM 0.5 //zona muerta
 
 /* Posiciones en el endstop y posiciones despues del home */
 #if  ENCODERINO == 1
@@ -19,21 +19,38 @@
 #define AFTER_HOME 110.0
 float offset = 0;
 #elif  ENCODERINO == 2
-#define HOME_ANGLE 117.0
+#define HOME_ANGLE 103.0
 #define AFTER_HOME 45.0;
 float offset = 73 + 90;
 #elif  ENCODERINO == 3
-#define HOME_ANGLE -114.0
+#define HOME_ANGLE 15.0
 #define AFTER_HOME -45.0;
 float offset = -120 + 30; //-100;
 #endif
 
 long int t = millis();
+long int t_ant = millis();
+
 unsigned long dly = 0;
 float angleRef, angleRead;
-float error, Kp, PID;
+
+float  PID, error;
+
+#ifdef ENCODERINO == 2
+float Kp_1 = 4 , Kff = 0.8 , Kd = 0.0, Kp_v = 0.015 , Kp_0 = 0.7;
+#elif ENCODERINO == 3
+float Kp_1 = 4 , Kff = 0.8 , Kd = 0.0, Kp_v = 0.015 , Kp_0 = 0.5;
+#endif
 
 float ref = 20;
+float  error_ant, ref_ant;
+
+
+
+
+
+
+
 
 
 float abs_angle;
@@ -76,10 +93,9 @@ float getAngle() {
 
 
 float speed = 0.0;// Velocidad objetivo
+float Kp,PID_p, PID_ff, PID_d;
 
 void control_pos() {
-
-  Kp = 1.5;
 
   angleRead = getAngle();
 
@@ -89,8 +105,30 @@ void control_pos() {
   error = -ref + angleRead;
 #endif
 
+  t = millis();
+  float dt = (t - t_ant) / 1000.0;
+  float derror = error - error_ant;
+  float dref = ref - ref_ant;
+
+  if (fabs(error) < 0.4) PID = 0;
+  else {
+    if (fabs(error) < 1) Kp = Kp_0;
+    else Kp = Kp_1;
+    
+    PID_p = Kp * error;
+    PID_ff = Kff * dref / dt;
+    PID_d = Kd * derror / dt;
+
+    PID = PID_p + PID_ff + PID_d ;
+  }
+
+  // Kp=// Kp_v*fabs(error)+Kp_0;
+
   //calcula la velocidad
-  PID = Kp * error;
+
+  error_ant = error;
+  ref_ant = ref;
+  t_ant = t;
 
   dly = fabs(1.0 / (PID / 60.0 * 200.0 * 32.0 ) / 2.0) * 1e6;
   if (PID == 0) dly = 0;
@@ -189,7 +227,7 @@ float advanceSpline(float dt) {
   float t = (millis() - spline.getStart()) / 1000.0;
   float s = (spline.evaluate(t + dt) - spline.evaluate(t));
   float v = s / dt;
- 
+
   long int nstep, n;
   n = 0;
   //una vuelta son 200 pasos y avanza 8 mm
@@ -197,7 +235,7 @@ float advanceSpline(float dt) {
   unsigned long dly;
   // tengo que calcular la velocidad lineal ahora tengo velocidad angular
 
-  dly = fabs((1.0 / (v / 60.0 * 200.0 ) / 2.0) * 1e6)/9;
+  dly = fabs((1.0 / (v / 60.0 * 200.0 ) / 2.0) * 1e6) / 9;
 
 #ifdef ENCODERINO == 1
   nstep *= 8;
@@ -208,28 +246,28 @@ float advanceSpline(float dt) {
     dly = 0;
     nstep = -1;
   }
-  
-    while (n <= nstep) {      
-      if (s == 0) continue;
-      if (s > 0) {
-        digitalWrite(DIR_PIN, HIGH);
-        digitalWrite(STEP_PIN, HIGH);
-        delayMicroseconds(dly);
-        digitalWrite(STEP_PIN, LOW);
-        delayMicroseconds(dly);
-      } else {
-        digitalWrite(DIR_PIN, LOW);
-        digitalWrite(STEP_PIN, HIGH);
-        delayMicroseconds(dly);
-        digitalWrite(STEP_PIN, LOW);
-        delayMicroseconds(dly);
-      }
-      n++;
+
+  while (n <= nstep) {
+    if (s == 0) continue;
+    if (s > 0) {
+      digitalWrite(DIR_PIN, HIGH);
+      digitalWrite(STEP_PIN, HIGH);
+      delayMicroseconds(dly);
+      digitalWrite(STEP_PIN, LOW);
+      delayMicroseconds(dly);
+    } else {
+      digitalWrite(DIR_PIN, LOW);
+      digitalWrite(STEP_PIN, HIGH);
+      delayMicroseconds(dly);
+      digitalWrite(STEP_PIN, LOW);
+      delayMicroseconds(dly);
     }
-   
-   
-  
-    return spline.evaluate(t);
+    n++;
+  }
+
+
+
+  return spline.evaluate(t);
 }
 
 

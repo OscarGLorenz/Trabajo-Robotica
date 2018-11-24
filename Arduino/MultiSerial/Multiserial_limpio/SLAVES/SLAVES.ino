@@ -1,6 +1,10 @@
 #define ENCODERINO 3  // COMPILACIÓN CONDICIONAL, 1,2 o 3. EN UN FUTURO A LA EEPROM
 #define LOBOTOMIA LOW
 
+#ifdef __AVR_ATmega2560__
+    #error ESTAS SUBIENDO EL SLAVE AL MASTER, ¡INUTIL!
+#endif
+
 #include "spline.h"
 #include "control.h"
 #include "Encoder.h"
@@ -12,6 +16,7 @@ void setup() {
   Serial1.setTimeout(30);    // Timeout de 5ms
 
   encoder.enable(LOBOTOMIA);
+
 }
 
 void loop() {
@@ -40,8 +45,8 @@ void loop() {
           ref = AFTER_HOME;
         #elif ENCODERINO == 3
           homing = true;
-          delay(2000);
-          advance(100000, 2 * 32);
+          //delay(2000);
+          advance(-100000, 2 * 32);
           nvueltas = 0;
           HomeAngle = 360 - encoder.leerEncoder();
           ref = AFTER_HOME;
@@ -105,14 +110,15 @@ void loop() {
 	
       /* INTERPOLACIÓN POR SPLINES*/
       case 5:
+  
         spline.loadSpline();
 	      break;
       /* INTERPOLACIÓN POR SPLINES*/
 
     } // ... end switch
   }// ... end if serial  available 
-
-   
+  static long last_1 = millis();
+  if ((millis() - last_1) > 7) { 
   /* CONTROL DE VELOCIDAD Y HOMING */
   #if ENCODERINO == 1
     if (fabs(speed) > 0.1 && id == 2) {
@@ -135,7 +141,8 @@ void loop() {
     }
   #endif
   /* CONTROL DE VELOCIDAD Y HOMING */
-
+  last_1=millis();
+  }
   static float dt=0.01;
   /* ACTUALIZAR REFERENCIA CON LAS SPLINES */	
   if (!spline.stop(millis()/1000.0+dt)) {
@@ -161,7 +168,7 @@ void loop() {
   #else
     Serial1.println(getAngle());
     //Serial1.println(ref);
-    
+    //Serial1.println(String(ref) + " " + String(getAngle()) + " " + String(PID)+ " " + String(PID_p)+ " " + String (Kp)) ;
   #endif
     last = millis();
   }

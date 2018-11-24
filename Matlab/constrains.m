@@ -8,11 +8,11 @@ function inside = constrains(x)
 %     inside = constrains(x)
 %
 
-q2lim = deg2rad([6, 115]);  % 6 <= q2 <= 115
-q3lim = deg2rad([-116,13]); % -116 <= q3 <= 13
+q2lim = deg2rad([0, 94]);  % 6 <= q2 <= 115
+q3lim = deg2rad([-120,10]); % -116 <= q3 <= 13
 rlim = [156, 589];      % 30 <= q2-q3 <=158
 q1lim = [0, 250];  % 0 <= q1 <= 250
-zlim = -60;
+zlim = -130;
 ylim = 0;
 
 [q(1), q(2), q(3)] = inversa(x(1),x(2),x(3));

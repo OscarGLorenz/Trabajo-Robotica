@@ -32,40 +32,39 @@ str1 = sprintf(' %3.3f',[pp1.coefs(:);t(2:end)']);
 str2 = sprintf(' %3.3f',[pp2.coefs(:);t(2:end)']);
 str3 = sprintf(' %3.3f',[pp3.coefs(:);t(2:end)']);
 
+command = sprintf('J5 %d%s_%d%s_%d%s_', p-1, str1, p-1, str2, p-1, str3);
 % Mandar comandos
-mandarComando(app,sprintf('J5 M%d %d%s\n',1,p-1,str1));
-mandarComando(app,sprintf('J5 M%d %d%s\n',2,p-1,str2));
-mandarComando(app,sprintf('J5 M%d %d%s\n',3,p-1,str3));
+mandarComando(app,command);
 
 %Como hacer una gráfica de los resultados
-
-% Gráficas q-t
-figure
-tt = linspace(0,T);
-subplot(3,1,1);
-plot(t,q1,'o',tt,ppval(pp1,tt),'-'); 
-xlabel('t [s]');
-ylabel('q1 [mm]');
-grid on
-
-subplot(3,1,2);
-plot(t,q2,'o',tt,ppval(pp2,tt),'-');
-xlabel('t [s]');
-ylabel('q2 [deg]');
-grid on
-
-subplot(3,1,3);
-plot(t,q3,'o',tt,ppval(pp3,tt),'-');
-xlabel('t [s]');
-ylabel('q3 [deg]');
-grid on
-
-% Gráficas xyz con puntos de interpolación
-figure
-[x,y,z] = directa(ppval(pp1,tt),deg2rad(ppval(pp2,tt)),deg2rad(ppval(pp3,tt)));
-plot3(x,y,z,'-b'); hold on
-plot3(x1,x2,x3,'or');
-grid on
+% 
+% % Gráficas q-t
+% figure
+% tt = linspace(0,T);
+% subplot(3,1,1);
+% plot(t,q1,'o',tt,ppval(pp1,tt),'-'); 
+% xlabel('t [s]');
+% ylabel('q1 [mm]');
+% grid on
+% 
+% subplot(3,1,2);
+% plot(t,q2,'o',tt,ppval(pp2,tt),'-');
+% xlabel('t [s]');
+% ylabel('q2 [deg]');
+% grid on
+% 
+% subplot(3,1,3);
+% plot(t,q3,'o',tt,ppval(pp3,tt),'-');
+% xlabel('t [s]');
+% ylabel('q3 [deg]');
+% grid on
+% 
+% % Gráficas xyz con puntos de interpolación
+% figure
+% [x,y,z] = directa(ppval(pp1,tt),deg2rad(ppval(pp2,tt)),deg2rad(ppval(pp3,tt)));
+% plot3(x,y,z,'-b'); hold on
+% plot3(x1,x2,x3,'or');
+% grid on
 
 end
 
