@@ -1,3 +1,6 @@
+#ifdef __AVR_ATmega32U4__
+    #error ESTAS SUBIENDO EL MASTER AL SLAVE, ¡INUTIL!
+#endif
 
 #include "ENCODERINO.h"  // Clase Encoderino
 #include <Wire.h>
@@ -252,10 +255,10 @@ void loop() {
   int y = 300 * (cos(encoders[1]->getPos() * M_PI / 180.0) + cos(encoders[2]->getPos() * M_PI / 180.0));
   int z = 300 * (sin(encoders[1]->getPos() * M_PI / 180.0) + sin(encoders[2]->getPos() * M_PI / 180.0));
 
-  display.println("Q1: " + String((int) encoders[0]->getPos()) + "mm  X: " + String(x) + "mm");
-  display.println("Q2: " + String((int) encoders[1]->getPos()) + "deg Y: " + String(y) + "mm");
-  display.println("Q3: " + String((int) encoders[2]->getPos()) + "deg Z: " + String(z) + "mm");
-  display.println("Q4: " + String((int) ServoGarra.read()) + "deg");
+  display.println("Q1: " + String(encoders[0]->getPos()) + "mm  X: " + String(x) + "mm");
+  display.println("Q2: " + String(encoders[1]->getPos()) + "deg Y: " + String(y) + "mm");
+  display.println("Q3: " + String(encoders[2]->getPos()) + "deg Z: " + String(z) + "mm");
+  display.println("Q4: " + String(ServoGarra.read()) + "deg");
 
   display.display();
   /********OLED********/

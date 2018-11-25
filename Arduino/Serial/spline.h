@@ -11,7 +11,8 @@ void loadSpline(String string) {
 
   char * pch;
   pch = strtok (str," ");
-  sscanf(str,"%d",&n);
+
+  sscanf(pch,"%d",&n);
 
   free(a); a = malloc(sizeof(float) * n);
   free(b); b = malloc(sizeof(float) * n);
@@ -19,29 +20,36 @@ void loadSpline(String string) {
   free(d); d = malloc(sizeof(float) * n);
   free(t); t = malloc(sizeof(float) * (n + 1));
   
-  for (int i = 0; i < n; i++) {
+  char s[30];
     pch = strtok (NULL," ");
-    sscanf(pch,"%f",&d[i]);
+
+  for (int i = 0; i < n; i++) {
+    sscanf(pch,"%s",s);
+    d[i] = atof(s);
+    pch = strtok (NULL," ");
   }
   for (int i = 0; i < n; i++) {
+    sscanf(pch,"%s",s);
+    c[i] = atof(s);
     pch = strtok (NULL," ");
-    sscanf(pch,"%f",&c[i]);
   }
   for (int i = 0; i < n; i++) {
+    sscanf(pch,"%s",s);
+    b[i] = atof(s);
     pch = strtok (NULL," ");
-    sscanf(pch,"%f",&b[i]);
   }
   for (int i = 0; i < n; i++) {
+    sscanf(pch,"%s",s);
+    a[i] = atof(s);
     pch = strtok (NULL," ");
-    sscanf(pch,"%f",&a[i]);
   }
   for (int i = 1; i < n + 1; i++) {
+    sscanf(pch,"%s",s);
+    t[i] = atof(s);
     pch = strtok (NULL," ");
-    sscanf(pch,"%f",&t[i]);
   }
   t[0] = 0;
 
-  Serial.println(String(n) + " " + String(a[0]) +" " + String(b[0]) + " " +String(c[0]) + " " + String(d[0]) + " " + String(t[0]) + " " + String(t[1]));
 
   start = millis();
   interval = 0;

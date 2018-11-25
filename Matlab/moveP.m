@@ -7,20 +7,22 @@ function moveP (app,x0,xf,xc,v,p)
 %   xc: punto intermedio en mm
 %   v:  velocidad media en mm
 %   p: puntos de interpolación 
-    
-    center = [100 100 100]';
+
+    A = [xc-x0 xc-xf cross(xc-x0,xc-xf)]';
+    b = [0.5*dot(xc-x0,xc+x0); 0.5*dot(xc-xf,xc+xf); dot(cross(xc-x0,xc-xf),xc)];
+    center = A\b;
     
     theta1 = acos(dot(x0-center,xc-center)/(norm(x0-center)*norm(xc-center)));
+    theta2 = acos(dot(xc-center,xf-center)/(norm(xc-center)*norm(xf-center)));
     
-    T = (theta1*2)*norm(center-x0)/v;
+    T = (theta1+theta2)*norm(center-x0)/v;
     
-    c = (x0-center)/norm(x0-center)
-    v = cross(x0-center,xc-center)/norm(cross(x0-center,xc-center))
-    s = -cross(v,c)
+    c = (x0-center)/norm(x0-center);
+    v = cross(x0-center,xc-center)/norm(cross(x0-center,xc-center));
+    s = cross(v,c);
     
     
-    
-    thetas = linspace(0,2*theta1,p);
+    thetas = linspace(0,theta1+theta2,p);
         
     X =  center + c * norm(center-x0) * cos(thetas) + s * norm(center-x0) * sin(thetas);
     
@@ -80,9 +82,9 @@ plot3(x,y,z,'-b'); hold on
 plot3(X(1,:),X(2,:),X(3,:),'or');
 grid on
  plot3(x0(1),x0(2),x0(3),'og');
- plot3(xc(1),xc(2),xc(3),'ob');
- plot3(xf(1),xf(2),xf(3),'ok');
-  plot3(center(1),center(2),center(3),'om');
+ plot3(xc(1),xc(2),xc(3),'om');
+ plot3(xf(1),xf(2),xf(3),'oc');
+  plot3(center(1),center(2),center(3),'oy');
 
    axis equal
 end
