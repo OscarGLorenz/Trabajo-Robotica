@@ -23,7 +23,7 @@ float offset = 0;
 #define AFTER_HOME 45.0;
 float offset = 73 + 90;
 #elif  ENCODERINO == 3
-#define HOME_ANGLE 15.0
+#define HOME_ANGLE 11.0
 #define AFTER_HOME -45.0;
 float offset = -120 + 30; //-100;
 #endif
@@ -34,7 +34,8 @@ long int t_ant = millis();
 unsigned long dly = 0;
 float angleRef, angleRead;
 
-float  PID, error;
+float  PID, error; 
+float actual_pos=0;
 
 #ifdef ENCODERINO == 2
 float Kp_1 = 4 , Kff = 0.8 , Kd = 0.0, Kp_v = 0.015 , Kp_0 = 0.7;
@@ -167,10 +168,16 @@ bool homing = false;
 bool homeDonete = false;
 
 void advance(float distance, float speedScrew) {
-
-  long int nstep, n;
+  #if ENCODERINO == 1
+  long int ant_pos = actual_pos;
+  long int nsteps_dados = 0;
+  #endif
+  long int nstep, n,newref;
   n = 0;
   //una vuelta son 200 pasos y avanza 8 mm
+
+  
+  
   nstep = fabs((distance / 8.0) * 200);
 
   unsigned long dly;
@@ -188,6 +195,12 @@ void advance(float distance, float speedScrew) {
   }
 
   while (n <= nstep) {
+    
+    #if ENCODERINO == 1
+     actual_pos = ant_pos + ((nsteps_dados)/200);
+     NOBLOCK_DELAY(Serial1.println(actual_pos);,100)
+    #endif
+     
     // Si llega un ID=30 significa que se ha tocado el endstop
     // En el modo home se pasa a ir a after_home
     if (Serial1.available() > 0 &&  homing == true) {
@@ -208,6 +221,9 @@ void advance(float distance, float speedScrew) {
       delayMicroseconds(dly);
       digitalWrite(STEP_PIN, LOW);
       delayMicroseconds(dly);
+      #if ENCODERINO == 1
+      nsteps_dados++;
+      #endif
 
     } else {
 
@@ -216,18 +232,26 @@ void advance(float distance, float speedScrew) {
       delayMicroseconds(dly);
       digitalWrite(STEP_PIN, LOW);
       delayMicroseconds(dly);
+      #if ENCODERINO == 1
+      nsteps_dados--;
+      #endif
+      
     }
     n++;
+   
   }
 
+ 
+  
 }
 
 
 float advanceSpline(float dt) {
+  
   float t = (millis() - spline.getStart()) / 1000.0;
   float s = (spline.evaluate(t + dt) - spline.evaluate(t));
   float v = s / dt;
-
+ 
   long int nstep, n;
   n = 0;
   //una vuelta son 200 pasos y avanza 8 mm
@@ -248,6 +272,8 @@ float advanceSpline(float dt) {
   }
 
   while (n <= nstep) {
+    
+    
     if (s == 0) continue;
     if (s > 0) {
       digitalWrite(DIR_PIN, HIGH);
@@ -255,12 +281,21 @@ float advanceSpline(float dt) {
       delayMicroseconds(dly);
       digitalWrite(STEP_PIN, LOW);
       delayMicroseconds(dly);
+      
+      #ifdef ENCODERINO == 1 
+      actual_pos+=(1/200.0);
+      #endif
+      
     } else {
       digitalWrite(DIR_PIN, LOW);
       digitalWrite(STEP_PIN, HIGH);
       delayMicroseconds(dly);
       digitalWrite(STEP_PIN, LOW);
       delayMicroseconds(dly);
+      
+      #ifdef ENCODERINO == 1
+      actual_pos-=(1/200.0);
+      #endif
     }
     n++;
   }

@@ -1,4 +1,4 @@
-#define ENCODERINO 3  // COMPILACIÓN CONDICIONAL, 1,2 o 3. EN UN FUTURO A LA EEPROM
+#define ENCODERINO 2  // COMPILACIÓN CONDICIONAL, 1,2 o 3. EN UN FUTURO A LA EEPROM
 #define LOBOTOMIA LOW
 
 #ifdef __AVR_ATmega2560__
@@ -8,6 +8,7 @@
 #include "spline.h"
 #include "control.h"
 #include "Encoder.h"
+
 
 void setup() {
   encoder.init();
@@ -33,9 +34,11 @@ void loop() {
 	
 	#if   ENCODERINO == 1
 	  homing = true;                // Rutina home
-          advance(-1000, 150);           // Ir a un extremo
+          advance(-1000, 150);
+          actual_pos=0;// Ir a un extremo
           advance(AFTER_HOME, 300);   // Ir a after home
           ref = AFTER_HOME;
+          actual_pos=AFTER_HOME;
           nvueltas = 0;
 	#elif ENCODERINO == 2
           homing = true;
@@ -164,7 +167,7 @@ void loop() {
   static long last = millis();
   if ((millis() - last) > 100) {
   #if ENCODERINO == 1
-    Serial1.println(ref);
+    Serial1.println(actual_pos);
   #else
     Serial1.println(getAngle());
     //Serial1.println(ref);
