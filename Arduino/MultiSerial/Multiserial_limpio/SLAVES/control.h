@@ -38,20 +38,13 @@ float  PID, error;
 float actual_pos=0;
 
 #ifdef ENCODERINO == 2
-float Kp_1 = 4 , Kff = 0.8 , Kd = 0.0, Kp_v = 0.015 , Kp_0 = 0.7;
+float Kp_1 = 4 , Kff = 0.8 , Kd = 0.0, Ki=0.02 , Kp_v = 0.015 , Kp_0 = 0.7;
 #elif ENCODERINO == 3
-float Kp_1 = 4 , Kff = 0.8 , Kd = 0.0, Kp_v = 0.015 , Kp_0 = 0.5;
+float Kp_1 = 4 , Kff = 0.8 , Kd = 0.0, Ki=0.02 , Kp_v = 0.015 , Kp_0 = 0.5;
 #endif
 
 float ref = 20;
 float  error_ant, ref_ant;
-
-
-
-
-
-
-
 
 
 float abs_angle;
@@ -94,7 +87,7 @@ float getAngle() {
 
 
 float speed = 0.0;// Velocidad objetivo
-float Kp,PID_p, PID_ff, PID_d;
+float Kp,PID_p, PID_ff, PID_d,PID_i=0;
 
 void control_pos() {
 
@@ -120,7 +113,11 @@ void control_pos() {
     PID_ff = Kff * dref / dt;
     PID_d = Kd * derror / dt;
 
-    PID = PID_p + PID_ff + PID_d ;
+  if(!spline.stop(millis()/1000.0)){
+    PID_i+=Ki*error;    
+    }else PID_i=0;
+    
+    PID = PID_p + PID_ff + PID_d + PID_i;
   }
 
   // Kp=// Kp_v*fabs(error)+Kp_0;
