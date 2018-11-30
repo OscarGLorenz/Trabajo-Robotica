@@ -27,6 +27,10 @@ void loadSpline(void) {
 
 //  Serial1.println(String(n) + " " + String(a[0]) +" " + String(b[0]) + " " +String(c[0]) + " " + String(d[0]) + " " + String(t[0]) + " " + String(t[1]));
 
+  /*#ifdef ENCODERINO == 1
+  delay(1000); // COSA MUY MUY MUY MUY FEA
+  #endif*/
+  
   start = millis();
   interval = 0;
   active = true;
