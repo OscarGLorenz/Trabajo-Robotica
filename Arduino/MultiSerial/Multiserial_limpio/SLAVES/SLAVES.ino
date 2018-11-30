@@ -1,4 +1,4 @@
-#define ENCODERINO 2  // COMPILACIÓN CONDICIONAL, 1,2 o 3. EN UN FUTURO A LA EEPROM
+#define ENCODERINO 1  // COMPILACIÓN CONDICIONAL, 1,2 o 3. EN UN FUTURO A LA EEPROM
 #define LOBOTOMIA LOW
 
 #ifdef __AVR_ATmega2560__
@@ -13,7 +13,8 @@
 void setup() {
   encoder.init();
   pinMode(13,OUTPUT);
-  Serial1.begin(115200);     // Comunicación Serial a 115200 Baudios
+  //Serial1.begin(115200);     // Comunicación Serial a 115200 Baudios
+  Serial1.begin(250000);     // Comunicación Serial a 115200 Baudios
   Serial1.setTimeout(30);    // Timeout de 5ms
 
   encoder.enable(LOBOTOMIA);
