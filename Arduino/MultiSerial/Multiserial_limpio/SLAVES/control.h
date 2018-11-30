@@ -204,7 +204,7 @@ void advance(float distance, float speedScrew) {
       int id = Serial1.parseInt();
       Serial1.parseInt();
 
-      if (id == 30) {
+      if (id == 9) {
         homing = false;
         return;
       }

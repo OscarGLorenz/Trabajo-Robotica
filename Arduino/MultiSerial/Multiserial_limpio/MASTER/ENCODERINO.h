@@ -1,5 +1,5 @@
 #define ENCODER_TIMEOUT 10
-#define ENCODER_BAUDRATE 115200
+#define ENCODER_BAUDRATE 250000
 #define DEBOUNCE_TIME_ENDSTOP 40
 
 
@@ -19,7 +19,7 @@ class Encoderino {
 
     // ORDENES
     void goHome(void) {
-      serial->println("50"); //Era un "0"
+      serial->println("8"); //Era un "0"
     }
 
     void goPos(float q) {
@@ -49,7 +49,7 @@ class Encoderino {
       // Guardar la marca temporal del último flanco
       if (reading != lastButtonState)
         debounceTime = millis();
-     
+
       // Si ha pasado tiempo suficiente desde el último flanco
       if ((millis() - debounceTime) > DEBOUNCE_TIME_ENDSTOP) {
 
@@ -60,9 +60,9 @@ class Encoderino {
 
           // Si el flanco es de bajada
           if (buttonState == LOW) {
-              serial->println("30");
-              
-             //delay(50);                               // DANGER DANGER DANGER DANGER OJO BLOQUEO PELIGROSO
+            serial->println("9");
+
+            //delay(50);                               // DANGER DANGER DANGER DANGER OJO BLOQUEO PELIGROSO
           }
         }
       }
@@ -72,23 +72,19 @@ class Encoderino {
 
       // Si llega información por el serial1 debe ser su posición
       if (serial->available() > 0) {
-         // Guardamos este valor y purgamos el buffer
-         position = serial->parseFloat();
-         serial->parseFloat();
+        // Guardamos este valor y purgamos el buffer
+        position = serial->parseFloat();
+        serial->parseFloat();
 
-         // Mostrar posición en pantalla
-         #ifdef DEBUG
-         Serial.println(position);
-         #endif
       }
-      
+
     }
 
     // INFO
     float getPos(void) {
       return position;
     }
-    
+
   private:
     HardwareSerial * serial;   // Referencia al puerto serie
     float position = 0;        // Posición actual del encoder en mm o deg

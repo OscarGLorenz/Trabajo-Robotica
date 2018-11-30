@@ -13,9 +13,8 @@
 void setup() {
   encoder.init();
   pinMode(13,OUTPUT);
-  //Serial1.begin(115200);     // Comunicación Serial a 115200 Baudios
-  Serial1.begin(250000);     // Comunicación Serial a 115200 Baudios
-  Serial1.setTimeout(30);    // Timeout de 5ms
+  Serial1.begin(115200);     // Comunicación Serial a 115200 Baudios
+  //Serial1.setTimeout(30);    // Timeout de 5ms
 
   encoder.enable(LOBOTOMIA);
 
@@ -24,13 +23,19 @@ void setup() {
 void loop() {
   // Si llega algo por el puerto serie
   if (Serial1.available()) {
-    id = Serial1.parseInt();      // Guardar el ID
+    char str[1024];
+    Serial1.readBytesUntil('\n', str, 1024);
+    char arg0[2];
+    char arg1[2];
+    float q;
 
-    float q;                          // Argumento auxiliar
+    char * ptr = strtok(str, " ");
+    sscanf(ptr, "%s", &arg0);
+    int id = arg0[0] - '0';
+    
     switch (id) {
       /* RUTINA DE HOMING */
-      case 50:
-        Serial1.parseInt();             // Purga el buffer
+      case 8:
         spline.active = false;
 	
 	#if   ENCODERINO == 1
@@ -66,9 +71,10 @@ void loop() {
       case 1:
         spline.active = false;
         // Ir a posición
-        q = Serial1.parseFloat();    // Obtener posición
-        Serial1.parseFloat();        // Purgar buffer
-
+        
+        ptr = strtok (NULL, " ");
+        sscanf(ptr, "%s", arg1);
+        q = atof(arg1);
 
 	#if ENCODERINO == 1
           advance(q - ref, 120);     // Ir al la posición
@@ -86,8 +92,9 @@ void loop() {
       case 2:                        // Ir a velocidad
         spline.active = false;
 
-        q = Serial1.parseFloat();    // Obtener posición
-        Serial1.parseFloat();        // Purgar buffer
+        ptr = strtok (NULL, " ");
+        sscanf(ptr, "%s", arg1);
+        q = atof(arg1);
 
         speed = q;
         if (q > 0)  sentido = 1;
@@ -101,7 +108,6 @@ void loop() {
 
       /* DESHABILITAR STEPPER */
       case 3:                        // Activar/Desactivar stepper
-        Serial1.parseInt();          // Purgar Buffer
         spline.active = false;
 
         // Toggle al pin del enable
@@ -115,7 +121,7 @@ void loop() {
       /* INTERPOLACIÓN POR SPLINES*/
       case 5:
         
-        spline.loadSpline();
+        spline.loadSpline(&str[2]);
         //delay(500);// cosa muy muy fea
 	      break;
       /* INTERPOLACIÓN POR SPLINES*/

@@ -5,32 +5,51 @@ class Spline {
 public:
 
 bool active = false;
-void loadSpline(void) {
-  n = Serial1.parseInt();
+void loadSpline(char * str) {
+  char * ptr = strtok(str," ");
+
+  sscanf(ptr,"%d",&n);
+
   free(a); a = malloc(sizeof(float) * n);
   free(b); b = malloc(sizeof(float) * n);
   free(c); c = malloc(sizeof(float) * n);
   free(d); d = malloc(sizeof(float) * n);
   free(t); t = malloc(sizeof(float) * (n + 1));
-  for (int i = 0; i < n; i++)
-    d[i] = Serial1.parseFloat();
-  for (int i = 0; i < n; i++)
-    c[i] = Serial1.parseFloat();
-  for (int i = 0; i < n; i++)
-    b[i] = Serial1.parseFloat();
-  for (int i = 0; i < n; i++)
-    a[i] = Serial1.parseFloat();
-  for (int i = 1; i < n + 1; i++)
-    t[i] = Serial1.parseFloat();
-  t[0] = 0;
-    Serial1.parseFloat();
-
-//  Serial1.println(String(n) + " " + String(a[0]) +" " + String(b[0]) + " " +String(c[0]) + " " + String(d[0]) + " " + String(t[0]) + " " + String(t[1]));
-
-  /*#ifdef ENCODERINO == 1
-  delay(1000); // COSA MUY MUY MUY MUY FEA
-  #endif*/
   
+  char s[30];
+  ptr = strtok (NULL," ");
+  
+  for (int i = 0; i < n; i++) {
+    sscanf(ptr,"%s",s);
+    d[i] = atof(s);
+    ptr = strtok (NULL," ");
+  }
+  
+  for (int i = 0; i < n; i++) {
+    sscanf(ptr,"%s",s);
+    c[i] = atof(s);
+    ptr = strtok (NULL," ");
+  }
+
+  for (int i = 0; i < n; i++) {
+    sscanf(ptr,"%s",s);
+    b[i] = atof(s);
+    ptr = strtok (NULL," ");
+  }
+
+  for (int i = 0; i < n; i++) {
+    sscanf(ptr,"%s",s);
+    a[i] = atof(s);
+    ptr = strtok (NULL," ");
+  }
+
+  for (int i = 1; i < n + 1; i++) {
+    sscanf(ptr,"%s",s);
+    t[i] = atof(s);
+    ptr = strtok (NULL," ");
+  }
+  t[0] = 0;
+ 
   start = millis();
   interval = 0;
   active = true;

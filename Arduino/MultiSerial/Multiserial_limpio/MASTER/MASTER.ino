@@ -1,5 +1,5 @@
 #ifdef __AVR_ATmega32U4__
-    #error ESTAS SUBIENDO EL MASTER AL SLAVE, ¡INUTIL!
+#error ESTAS SUBIENDO EL MASTER AL SLAVE, ¡INUTIL!
 #endif
 
 #include "ENCODERINO.h"  // Clase Encoderino
@@ -11,7 +11,6 @@
 #define ServoG A0
 
 #define OLED_RESET 4
-String coza;
 // Pines del puente H
 #define PWMA 8
 #define AIN1 9
@@ -24,13 +23,24 @@ String coza;
 #define ENCODER_1 2
 #define ENCODER_2 3
 #define ENCODER_SW 4
+long time = millis();
 
-volatile long int encoder = 0;
+bool guiado = false;
+int posicion = 0;
+int anterior = 0;
 void isr() {
-  if (digitalRead(ENCODER_2)) {
-    encoder--;
-  } else {
-    encoder++;
+  static unsigned long ultimaInterrupcion = 0;
+  unsigned long tiempoInterrupcion = millis();
+
+  if (tiempoInterrupcion - ultimaInterrupcion > 5) {
+
+    if (digitalRead(ENCODER_2) == HIGH) {
+      posicion --;
+    } else {
+      posicion ++;
+    }
+
+    ultimaInterrupcion = tiempoInterrupcion;
   }
 }
 
@@ -50,8 +60,8 @@ Encoderino * encoders[] = {&encoder1, &encoder2, &encoder3};
 void setup() {
   // Comunicación USB
   Wire.begin();
-  Serial.begin(9600);
-  Serial.setTimeout(10);
+  Serial.begin(115200);
+ // Serial.setTimeout(100);
   pinMode(AIN2, OUTPUT);
   pinMode(AIN2, OUTPUT);
   pinMode(BIN1, OUTPUT);
@@ -69,7 +79,7 @@ void setup() {
 }
 
 void loop() {
-    
+
   // Actualiza encoders, revisa si han chocado con el endstop y si se ha preguntado la posición desde MATLAB
   encoders[0]->update();
   encoders[1]->update();
@@ -77,36 +87,47 @@ void loop() {
 
   static unsigned long eachWrite = millis();
   if (millis() - eachWrite > 200) {
-          char cmd[40] = {0};                  // Se manda la posición con formato %3.3f
-          
-          float q1 = encoders[0]->getPos(); // Obtención de la posición
-          float q2 = encoders[1]->getPos(); // Obtención de la posición
-          float q3 = encoders[2]->getPos(); // Obtención de la posición
-          char aux1[10];dtostrf(q1, 3, 3, aux1); 
-          char aux2[10];dtostrf(q2, 3, 3, aux2); 
-          char aux3[10];dtostrf(q3, 3, 3, aux3); 
+    char cmd[40] = {0};                  // Se manda la posición con formato %3.3f
 
-          strcat(cmd,aux1);
-          strcat(cmd," ");
-          strcat(cmd,aux2);
-          strcat(cmd," ");
-          strcat(cmd,aux3);
-          strcat(cmd," ");
+    float q1 = encoders[0]->getPos(); // Obtención de la posición
+    float q2 = encoders[1]->getPos(); // Obtención de la posición
+    float q3 = encoders[2]->getPos(); // Obtención de la posición
+    char aux1[10]; dtostrf(q1, 3, 3, aux1);
+    char aux2[10]; dtostrf(q2, 3, 3, aux2);
+    char aux3[10]; dtostrf(q3, 3, 3, aux3);
 
-          Serial.println(cmd);
+    strcat(cmd, aux1);
+    strcat(cmd, " ");
+    strcat(cmd, aux2);
+    strcat(cmd, " ");
+    strcat(cmd, aux3);
+    strcat(cmd, " ");
 
-          eachWrite = millis();
+    Serial.println(cmd);
+
+    eachWrite = millis();
   }
   // Si llegan ordenes de MATLAB
   if (Serial.available()) {
-    char jcode = Serial.read();          // Guarda la J o lo que sea
-    int motor;                           // ID del motor
-    float q;                             // Argumento adicional
+    char str[1024];
+    Serial.readBytesUntil('\n', str, 1024);
 
-    if (jcode == 'J') {                  // Si es un comando J...
+    char arg0[2];
+    char arg1[20];
+    char arg2[20];
+    int motor;
+    float value;
 
-      int cmd = Serial.parseInt();       // Obtener el ID del comando
-      switch (cmd) {
+    char * ptr = strtok(str, " ");
+    sscanf(ptr, "%s", &arg0);
+
+
+    char cmd = arg0[0];
+
+    if (cmd == 'J') {                  // Si es un comando J...
+
+      int id = arg0[1] - '0';
+      switch (id) {
 
         case 0:                          // Comando de Home
           encoders[0]->goHome();         // Manda a los motores orden de Home
@@ -117,25 +138,32 @@ void loop() {
 
 
         case 1:                          // Comando de posicion
-          Serial.read();  Serial.read(); // Eliminar " M" del buffer
-          motor = Serial.parseInt();     // Guarda el motor al que va destinada la orden
-          q = Serial.parseFloat();       // Guarda la posición a la que debe ir el motor
-          if (motor == 4) {
-            ServoGarra.write(q);
-          }
-          else {
-            encoders[motor - 1]->goPos(q); // Manda el motor correspondiente a la posición
-          }
+          ptr = strtok (NULL, " ");
+          sscanf(ptr, "%s", arg1);
+          motor = arg1[1] - '0';
+
+          ptr = strtok (NULL, " ");
+          sscanf(ptr, "%s", arg2);
+          value = atof(arg2);
+
+          if (motor == 4)
+            ServoGarra.write(value);
+          else
+            encoders[motor - 1]->goPos(value); // Manda el motor correspondiente a la posición
 
           break;
 
 
         case 2:                          // Comando de velocidad
-          Serial.read(); Serial.read();  // Eliminar " M" del buffer
-          motor = Serial.parseInt();     // Guarda el motor al que va destinada la orden
-          q = Serial.parseFloat();       // Guarda la posición a la que debe ir el motor
+            ptr = strtok (NULL," ");
+            sscanf(ptr,"%s",arg1);
+            motor = arg1[1]-'0';
 
-          encoders[motor - 1]->speed(q); // Manda el motor correspondiente a una velocidad
+            ptr = strtok (NULL," ");
+            sscanf(ptr,"%s",arg2);
+            value = atof(arg2);
+            
+            encoders[motor - 1]->speed(value); // Manda el motor correspondiente a una velocidad
 
           break;
 
@@ -149,49 +177,50 @@ void loop() {
 
 
         case 4:                          // Comando de herramienta
-          Serial.read();  Serial.read(); // Eliminar " M" del buffer
-          motor = Serial.parseInt();     // Guarda el motor al que va destinada la orden
-          q = Serial.parseFloat();       // Guarda la posición a la que debe ir el motor
+            ptr = strtok (NULL," ");
+            sscanf(ptr,"%s",arg1);
+            motor = arg1[1]-'0';
+
+            ptr = strtok (NULL," ");
+            sscanf(ptr,"%s",arg2);
+            value = atof(arg2);
+            
           if (motor == 1) { //Garra
-            clawUntilMillis = fabs(q) + millis();
-            if (q > 0) {
-              analogWrite(PWMB,255);
-              digitalWrite(BIN1,HIGH);
-              digitalWrite(BIN2,LOW);
+            clawUntilMillis = fabs(value) + millis();
+            if (value > 0) {
+              analogWrite(PWMB, 255);
+              digitalWrite(BIN1, HIGH);
+              digitalWrite(BIN2, LOW);
             } else {
-              analogWrite(PWMB,255);
-              digitalWrite(BIN1,LOW);
-              digitalWrite(BIN2,HIGH);            
+              analogWrite(PWMB, 255);
+              digitalWrite(BIN1, LOW);
+              digitalWrite(BIN2, HIGH);
             }
           } else if (motor == 2) {        //Bomba
             digitalWrite(AIN1, HIGH);
             digitalWrite(AIN2, LOW);
-            analogWrite(PWMA, fabs(q));
+            analogWrite(PWMA, fabs(value));
           }
 
           break;
-          
+
         case 5:                          // Interpolación con splines
-          Serial.read();          
-          encoders[0]->write(String("5 ") + Serial.readStringUntil('_'));
-          encoders[1]->write(String("5 ") + Serial.readStringUntil('_'));
-          encoders[2]->write(String("5 ") + Serial.readStringUntil('_'));
+          ptr = strtok(&str[3],"_");
+          encoders[0]->write(String("5 ") + String(ptr));
+
+          ptr = strtok(NULL,"_");
+          encoders[1]->write(String("5 ") + String(ptr));
+
+          ptr = strtok(NULL,"_");
+          encoders[2]->write(String("5 ") + String(ptr));
 
           break;
-          
-//        case 20:                         // Comando para pedir posición
-//          Serial.read(); Serial.read();  // Eliminar " M" del buffer
-//          motor = Serial.parseInt();     // Coger motor
-//
-//          q = encoders[motor - 1]->getPos(); // Obtención de la posición
-//
-//          char str[30];                  // Se manda la posición con formato %3.3f
-//          Serial.print("D1 M");
-//          Serial.print(motor);
-//          Serial.print(" ");
-//          Serial.println(dtostrf(q, 3, 3, str));
-//          break;
-
+        case 6:
+          anterior = posicion = encoders[0]->getPos();
+          encoders[1]->disable();
+          encoders[2]->disable();
+          guiado = !guiado;
+          break;
       }
     }
   }
@@ -199,52 +228,21 @@ void loop() {
 
 
 
-
   /********GARRA********/
   if (clawUntilMillis < millis()) {
-    analogWrite(PWMB,0);
-    digitalWrite(BIN1,LOW);
-    digitalWrite(BIN2,LOW);  
+    analogWrite(PWMB, 0);
+    digitalWrite(BIN1, LOW);
+    digitalWrite(BIN2, LOW);
   }
   /********GARRA********/
 
 
-//  /********ENCODER********/
-//  static bool read = 0;
-//  read = digitalRead(ENCODER_SW);
-//  static bool oldRead = 0;
-//  static bool rising = false;
-//  static long int timeLast;
-//  bool NOguiado = false;
-//  
-//  if (read && !oldRead) {
-//    timeLast = millis();
-//    rising = true;
-//  }
-//
-//  if ((millis() - timeLast) >= 80 && read && rising && millis() > 2000) {
-//    NOguiado = !NOguiado;
-//    rising = false;
-//
-//    encoders[1]->disable();
-//    encoders[2]->disable();
-//  }
-//
-//  oldRead = read;
-//
-//  if (!NOguiado && encoder != 0) {
-//    static float pos = encoders[0]->getPos();
-//    pos = encoders[0]->getPos() + encoder;
-//    encoder = 0;
-//    if (pos > 0 && pos < 180)
-//      encoders[0]->goPos(pos);
-//    Serial.println(pos);
-//  }
-//  /********ENCODER********/
+  if (guiado && (millis() - time > 100) && posicion != anterior) {
+    anterior = posicion = constrain(posicion, 0, 250);
+    encoders[0]->goPos(anterior);
+    time = millis();
+  }
 
-
-
-  
   /********OLED********/
   display.clearDisplay();
 
