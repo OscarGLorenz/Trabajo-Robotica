@@ -14,7 +14,7 @@ class Encoderino {
     // Inicial el puerto serie
     void init(void) {
       serial->begin(ENCODER_BAUDRATE);
-      serial->setTimeout(ENCODER_TIMEOUT);
+      //serial->setTimeout(ENCODER_TIMEOUT);
     }
 
     // ORDENES
@@ -72,10 +72,9 @@ class Encoderino {
 
       // Si llega información por el serial1 debe ser su posición
       if (serial->available() > 0) {
-        // Guardamos este valor y purgamos el buffer
-        position = serial->parseFloat();
-        serial->parseFloat();
-
+        char str[30];
+        serial->readBytesUntil('\n',str,30);
+        position = atof(str);
       }
 
     }

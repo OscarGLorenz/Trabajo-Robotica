@@ -198,11 +198,13 @@ void advance(float distance, float speedScrew) {
      NOBLOCK_DELAY(Serial1.println(actual_pos);,100)
     #endif
      
-    // Si llega un ID=30 significa que se ha tocado el endstop
+    // Si llega un ID=9 significa que se ha tocado el endstop
     // En el modo home se pasa a ir a after_home
     if (Serial1.available() > 0 &&  homing == true) {
-      int id = Serial1.parseInt();
-      Serial1.parseInt();
+      char str[30];
+      Serial1->readBytesUntil('\n',str,30);
+      
+      int id = atoi(str);
 
       if (id == 9) {
         homing = false;
