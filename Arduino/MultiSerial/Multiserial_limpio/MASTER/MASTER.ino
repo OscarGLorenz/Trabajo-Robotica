@@ -2,11 +2,10 @@
 #error ESTAS SUBIENDO EL MASTER AL SLAVE, ¡INUTIL!
 #endif
 
+#include <stdio.h>
 #include "ENCODERINO.h"  // Clase Encoderino
 #include <Wire.h>
 #include <Servo.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
 
 #define ServoG A0
 
@@ -24,8 +23,6 @@
 #define ENCODER_2 3
 #define ENCODER_SW 4
 long time = millis();
-
-char command[1024];
 
 bool guiado = false;
 int posicion = 0;
@@ -46,7 +43,6 @@ void isr() {
   }
 }
 
-Adafruit_SSD1306 display(OLED_RESET);
 
 Servo ServoGarra;
 unsigned long clawUntilMillis = 0;  // Tiempo funcionamiento de la garra
@@ -59,12 +55,13 @@ Encoderino encoder3(&Serial3, A3);
 // Array para indexar
 Encoderino * encoders[] = {&encoder1, &encoder2, &encoder3};
 
-void setup() {
-  // Comunicación USB
-  Wire.begin();
-  Serial.begin(115200);
 
- // Serial.setTimeout(100);
+void setup() {  
+    Serial.begin(115200);
+
+    Serial.println("OK");
+
+     // Serial.setTimeout(100);
   pinMode(AIN2, OUTPUT);
   pinMode(AIN2, OUTPUT);
   pinMode(BIN1, OUTPUT);
@@ -74,21 +71,20 @@ void setup() {
   encoders[0]->init();
   encoders[1]->init();
   encoders[2]->init();
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   ServoGarra.attach(ServoG);
 
   attachInterrupt(digitalPinToInterrupt(ENCODER_1), isr, RISING); // Flanco bajada en el encoder
 
 }
 
-void loop() {
-
-  // Actualiza encoders, revisa si han chocado con el endstop y si se ha preguntado la posición desde MATLAB
+char command[1024];
+void loop() {  
+    // Actualiza encoders, revisa si han chocado con el endstop y si se ha preguntado la posición desde MATLAB
   encoders[0]->update();
   encoders[1]->update();
   encoders[2]->update();
 
-  static unsigned long eachWrite = millis();
+ static unsigned long eachWrite = millis();
   if (millis() - eachWrite > 200) {
     char cmd[40] = {0};                  // Se manda la posición con formato %3.3f
 
@@ -111,26 +107,25 @@ void loop() {
     eachWrite = millis();
   }
   
-  // Si llegan ordenes de MATLAB
   if (Serial.available()) {
-    String str = Serial.readStringUntil('\n');
-    str.toCharArray(command,1024);
+     String cmd = Serial.readStringUntil('\n');
+     cmd.toCharArray(command, 1024);
 
-    char arg0[2];
-    char arg1[20];
-    char arg2[20];
+
+     // "command" now contains the full command
+    //Serial.println(command);
+
+    char jcode;
+    int id;
     int motor;
     float value;
-
+    
     char * ptr = strtok(command, " ");
-    sscanf(ptr, "%s", &arg0);
+    jcode = ptr[0];
+    id = atoi(&ptr[1]);
+      
+    if (jcode == 'J') {                  // Si es un comando J...
 
-
-    char cmd = arg0[0];
-
-    if (cmd == 'J') {                  // Si es un comando J...
-
-      int id = arg0[1] - '0';
       switch (id) {
 
         case 0:                          // Comando de Home
@@ -143,32 +138,26 @@ void loop() {
 
         case 1:                          // Comando de posicion
           ptr = strtok (NULL, " ");
-          sscanf(ptr, "%s", arg1);
-          motor = arg1[1] - '0';
-
+          motor = atoi(&ptr[1]);
           ptr = strtok (NULL, " ");
-          sscanf(ptr, "%s", arg2);
-          value = atof(arg2);
-
+          value = atof(ptr);
+          
           if (motor == 4)
             ServoGarra.write(value);
           else
             encoders[motor - 1]->goPos(value); // Manda el motor correspondiente a la posición
-
+          
           break;
 
 
         case 2:                          // Comando de velocidad
-            ptr = strtok (NULL," ");
-            sscanf(ptr,"%s",arg1);
-            motor = arg1[1]-'0';
-
-            ptr = strtok (NULL," ");
-            sscanf(ptr,"%s",arg2);
-            value = atof(arg2);
-            
-            encoders[motor - 1]->speed(value); // Manda el motor correspondiente a una velocidad
-
+          ptr = strtok (NULL, " ");
+          motor = atoi(&ptr[1]);
+          ptr = strtok (NULL, " ");
+          value = atof(ptr);
+          
+          encoders[motor - 1]->speed(value); // Manda el motor correspondiente a una velocidad
+          
           break;
 
 
@@ -176,19 +165,15 @@ void loop() {
           encoders[0]->disable();
           encoders[1]->disable();
           encoders[2]->disable();
-
           break;
 
 
         case 4:                          // Comando de herramienta
-            ptr = strtok (NULL," ");
-            sscanf(ptr,"%s",arg1);
-            motor = arg1[1]-'0';
+          ptr = strtok (NULL, " ");
+          motor = atoi(&ptr[1]);
+          ptr = strtok (NULL, " ");
+          value = atof(ptr);
 
-            ptr = strtok (NULL," ");
-            sscanf(ptr,"%s",arg2);
-            value = atof(arg2);
-            
           if (motor == 1) { //Garra
             clawUntilMillis = fabs(value) + millis();
             if (value > 0) {
@@ -205,28 +190,31 @@ void loop() {
             digitalWrite(AIN2, LOW);
             analogWrite(PWMA, fabs(value));
           }
-
           break;
 
         case 5:                          // Interpolación con splines
           char buffer[1024];
+
           ptr = strtok(&command[3],"_");
-          buffer[0] = '5'; buffer[1] = ' '; buffer[2] = 0;
+          buffer[0] = '5'; buffer[1] = ' '; buffer[2] = '\0'; 
           strcat(buffer,ptr);
           encoders[0]->write(buffer);
-         // Serial.println(buffer);
-          
+        //  Serial.println(buffer);
+
+          delay(100);
           ptr = strtok(NULL,"_");
-          buffer[0] = '5'; buffer[1] = ' '; buffer[2] = 0;
+          buffer[0] = '5'; buffer[1] = ' '; buffer[2] = '\0'; 
           strcat(buffer,ptr);
           encoders[1]->write(buffer);
-         // Serial.println(buffer);
+          //Serial.println(buffer);
 
+          delay(100);
           ptr = strtok(NULL,"_");
-          buffer[0] = '5'; buffer[1] = ' '; buffer[2] = 0;
+          buffer[0] = '5'; buffer[1] = ' '; buffer[2] = '\0'; 
           strcat(buffer,ptr);
           encoders[2]->write(buffer);
-         // Serial.println(buffer);
+        //  Serial.println(buffer);
+
 
           break;
         case 6:
@@ -237,42 +225,6 @@ void loop() {
           break;
       }
     }
+
   }
-
-
-
-
-  /********GARRA********/
-  if (clawUntilMillis < millis()) {
-    analogWrite(PWMB, 0);
-    digitalWrite(BIN1, LOW);
-    digitalWrite(BIN2, LOW);
-  }
-  /********GARRA********/
-
-
-  if (guiado && (millis() - time > 100) && posicion != anterior) {
-    anterior = posicion = constrain(posicion, 0, 250);
-    encoders[0]->goPos(anterior);
-    time = millis();
-  }
-
-  /********OLED********/
-  display.clearDisplay();
-
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(0, 0);
-  int x = encoders[0]->getPos();
-  int y = 300 * (cos(encoders[1]->getPos() * M_PI / 180.0) + cos(encoders[2]->getPos() * M_PI / 180.0));
-  int z = 300 * (sin(encoders[1]->getPos() * M_PI / 180.0) + sin(encoders[2]->getPos() * M_PI / 180.0));
-
-  display.println("Q1: " + String(encoders[0]->getPos()) + "mm  X: " + String(x) + "mm");
-  display.println("Q2: " + String(encoders[1]->getPos()) + "deg Y: " + String(y) + "mm");
-  display.println("Q3: " + String(encoders[2]->getPos()) + "deg Z: " + String(z) + "mm");
-  display.println("Q4: " + String(ServoGarra.read()) + "deg");
-
-  display.display();
-  /********OLED********/
-
 }

@@ -2,7 +2,7 @@
 #define ENCODER_BAUDRATE 250000
 #define DEBOUNCE_TIME_ENDSTOP 40
 
-
+ 
 class Encoderino {
   public:
     // Se debe pasar una referencia al serial y el pin de su endstop
