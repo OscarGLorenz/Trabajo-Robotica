@@ -19,7 +19,7 @@ class Encoderino {
 
     // ORDENES
     void goHome(void) {
-      serial->println("8"); //Era un "0"
+      serial->println("50"); //Era un "0"
     }
 
     void goPos(float q) {
@@ -60,7 +60,7 @@ class Encoderino {
 
           // Si el flanco es de bajada
           if (buttonState == LOW) {
-            serial->println("9");
+            serial->println("30");
 
             //delay(50);                               // DANGER DANGER DANGER DANGER OJO BLOQUEO PELIGROSO
           }

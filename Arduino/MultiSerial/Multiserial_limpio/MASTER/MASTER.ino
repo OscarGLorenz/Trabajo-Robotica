@@ -25,6 +25,8 @@
 #define ENCODER_SW 4
 long time = millis();
 
+char command[1024];
+
 bool guiado = false;
 int posicion = 0;
 int anterior = 0;
@@ -61,6 +63,7 @@ void setup() {
   // Comunicación USB
   Wire.begin();
   Serial.begin(115200);
+
  // Serial.setTimeout(100);
   pinMode(AIN2, OUTPUT);
   pinMode(AIN2, OUTPUT);
@@ -107,10 +110,11 @@ void loop() {
 
     eachWrite = millis();
   }
+  
   // Si llegan ordenes de MATLAB
   if (Serial.available()) {
-    char str[1024];
-    Serial.readBytesUntil('\n', str, 1024);
+    String str = Serial.readStringUntil('\n');
+    str.toCharArray(command,1024);
 
     char arg0[2];
     char arg1[20];
@@ -118,7 +122,7 @@ void loop() {
     int motor;
     float value;
 
-    char * ptr = strtok(str, " ");
+    char * ptr = strtok(command, " ");
     sscanf(ptr, "%s", &arg0);
 
 
@@ -205,14 +209,24 @@ void loop() {
           break;
 
         case 5:                          // Interpolación con splines
-          ptr = strtok(&str[3],"_");
-          encoders[0]->write(String("5 ") + String(ptr));
+          char buffer[1024];
+          ptr = strtok(&command[3],"_");
+          buffer[0] = '5'; buffer[1] = ' '; buffer[2] = 0;
+          strcat(buffer,ptr);
+          encoders[0]->write(buffer);
+         // Serial.println(buffer);
+          
+          ptr = strtok(NULL,"_");
+          buffer[0] = '5'; buffer[1] = ' '; buffer[2] = 0;
+          strcat(buffer,ptr);
+          encoders[1]->write(buffer);
+         // Serial.println(buffer);
 
           ptr = strtok(NULL,"_");
-          encoders[1]->write(String("5 ") + String(ptr));
-
-          ptr = strtok(NULL,"_");
-          encoders[2]->write(String("5 ") + String(ptr));
+          buffer[0] = '5'; buffer[1] = ' '; buffer[2] = 0;
+          strcat(buffer,ptr);
+          encoders[2]->write(buffer);
+         // Serial.println(buffer);
 
           break;
         case 6:
