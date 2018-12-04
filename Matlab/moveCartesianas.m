@@ -36,9 +36,8 @@ command = sprintf('J5 %d%s_%d%s_%d%s_', p-1, str1, p-1, str2, p-1, str3);
 % Mandar comandos
 mandarComando(app,command);
 
-%Como hacer una gráfica de los resultados
-% 
-% % Gráficas q-t
+
+% % Gr�ficas q-t
 % figure
 % tt = linspace(0,T);
 % subplot(3,1,1);
@@ -59,7 +58,7 @@ mandarComando(app,command);
 % ylabel('q3 [deg]');
 % grid on
 % 
-% % Gráficas xyz con puntos de interpolación
+% % Gr�ficas xyz con puntos de interpolaci�n
 % figure
 % [x,y,z] = directa(ppval(pp1,tt),deg2rad(ppval(pp2,tt)),deg2rad(ppval(pp3,tt)));
 % plot3(x,y,z,'-b'); hold on

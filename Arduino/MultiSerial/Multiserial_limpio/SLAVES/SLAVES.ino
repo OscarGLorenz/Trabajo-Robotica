@@ -1,4 +1,4 @@
-#define ENCODERINO 3  // COMPILACIÓN CONDICIONAL, 1,2 o 3. EN UN FUTURO A LA EEPROM
+#define ENCODERINO 1  // COMPILACIÓN CONDICIONAL, 1,2 o 3. EN UN FUTURO A LA EEPROM
 #define LOBOTOMIA LOW
 
 #ifdef __AVR_ATmega2560__
@@ -9,11 +9,12 @@
 #include "control.h"
 #include "Encoder.h"
 
+
 void setup() {
   encoder.init();
   pinMode(13,OUTPUT);
   Serial1.begin(115200);     // Comunicación Serial a 115200 Baudios
-  Serial1.setTimeout(30);    // Timeout de 5ms
+  //Serial1.setTimeout(30);    // Timeout de 5ms
 
   encoder.enable(LOBOTOMIA);
 
@@ -22,20 +23,28 @@ void setup() {
 void loop() {
   // Si llega algo por el puerto serie
   if (Serial1.available()) {
-    id = Serial1.parseInt();      // Guardar el ID
+    char str[1024];
+    Serial1.readBytesUntil('\n', str, 1024);
+    char arg0[2];
+    char arg1[2];
+    float q;
 
-    float q;                          // Argumento auxiliar
+    char * ptr = strtok(str, " ");
+    sscanf(ptr, "%s", &arg0);
+    int id = arg0[0] - '0';
+    
     switch (id) {
       /* RUTINA DE HOMING */
-      case 50:
-        Serial1.parseInt();             // Purga el buffer
+      case 8:
         spline.active = false;
 	
 	#if   ENCODERINO == 1
 	  homing = true;                // Rutina home
-          advance(-1000, 150);           // Ir a un extremo
-          advance(AFTER_HOME, 300);   // Ir a after home
+          advance(-1000, 150);
+          actual_pos=0;// Ir a un extremo
+          advance(AFTER_HOME, 220);   // Ir a after home
           ref = AFTER_HOME;
+          actual_pos=AFTER_HOME;
           nvueltas = 0;
 	#elif ENCODERINO == 2
           homing = true;
@@ -62,9 +71,10 @@ void loop() {
       case 1:
         spline.active = false;
         // Ir a posición
-        q = Serial1.parseFloat();    // Obtener posición
-        Serial1.parseFloat();        // Purgar buffer
-
+        
+        ptr = strtok (NULL, " ");
+        sscanf(ptr, "%s", arg1);
+        q = atof(arg1);
 
 	#if ENCODERINO == 1
           advance(q - ref, 120);     // Ir al la posición
@@ -82,8 +92,9 @@ void loop() {
       case 2:                        // Ir a velocidad
         spline.active = false;
 
-        q = Serial1.parseFloat();    // Obtener posición
-        Serial1.parseFloat();        // Purgar buffer
+        ptr = strtok (NULL, " ");
+        sscanf(ptr, "%s", arg1);
+        q = atof(arg1);
 
         speed = q;
         if (q > 0)  sentido = 1;
@@ -97,7 +108,6 @@ void loop() {
 
       /* DESHABILITAR STEPPER */
       case 3:                        // Activar/Desactivar stepper
-        Serial1.parseInt();          // Purgar Buffer
         spline.active = false;
 
         // Toggle al pin del enable
@@ -110,15 +120,16 @@ void loop() {
 	
       /* INTERPOLACIÓN POR SPLINES*/
       case 5:
-  
-        spline.loadSpline();
+        
+        spline.loadSpline(&str[2]);
+        //delay(500);// cosa muy muy fea
 	      break;
       /* INTERPOLACIÓN POR SPLINES*/
 
     } // ... end switch
   }// ... end if serial  available 
   static long last_1 = millis();
-  if ((millis() - last_1) > 7) { 
+  if ((millis() - last_1) > 10) { 
   /* CONTROL DE VELOCIDAD Y HOMING */
   #if ENCODERINO == 1
     if (fabs(speed) > 0.1 && id == 2) {
@@ -162,9 +173,9 @@ void loop() {
 
   // Mandar cada cierto tiempo la referencia actual
   static long last = millis();
-  if ((millis() - last) > 100) {
+  if ((millis() - last) > 150) {
   #if ENCODERINO == 1
-    Serial1.println(ref);
+    Serial1.println(actual_pos);
   #else
     Serial1.println(getAngle());
     //Serial1.println(ref);
