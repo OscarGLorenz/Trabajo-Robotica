@@ -27,8 +27,8 @@ long time = millis();
 bool guiado = false;
 int posicion = 0;
 int anterior = 0;
+unsigned long ultimaInterrupcion = 0;
 void isr() {
-  static unsigned long ultimaInterrupcion = 0;
   unsigned long tiempoInterrupcion = millis();
 
   if (tiempoInterrupcion - ultimaInterrupcion > 5) {
@@ -58,8 +58,6 @@ Encoderino * encoders[] = {&encoder1, &encoder2, &encoder3};
 
 void setup() {  
     Serial.begin(115200);
-
-    Serial.println("OK");
 
      // Serial.setTimeout(100);
   pinMode(AIN2, OUTPUT);
@@ -133,6 +131,7 @@ void loop() {
           encoders[1]->goHome();
           encoders[2]->goHome();
           ServoGarra.write(90);
+          guiado = false;
           break;
 
 
@@ -227,4 +226,10 @@ void loop() {
     }
 
   }
+
+  if (guiado && (millis() - time > 500) && posicion != anterior) { 
+    anterior = posicion = constrain(posicion, 0, 250); 
+    encoders[0]->goPos(anterior); 
+    time = millis(); 
+  } 
 }
