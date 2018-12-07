@@ -15,7 +15,7 @@ juega = rand > 0.5;
 
 
 while(  (sum(A(:) == -1) ~= 0) &&   (sum(A(:) == 1) ~= 0)) 
-        dibujah;
+    dibujah;
     juega = ~juega;
     
     if (juega) 
