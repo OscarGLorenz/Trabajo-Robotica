@@ -2,10 +2,13 @@
 #error ESTAS SUBIENDO EL MASTER AL SLAVE, ¡INUTIL!
 #endif
 
+#include "OLED.h"
 #include <stdio.h>
 #include "ENCODERINO.h"  // Clase Encoderino
 #include <Wire.h>
 #include <Servo.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 #define ServoG A0
 
@@ -23,7 +26,6 @@
 #define ENCODER_2 3
 #define ENCODER_SW 4
 long time = millis();
-
 bool guiado = false;
 int posicion = 0;
 int anterior = 0;
@@ -55,7 +57,7 @@ Encoderino encoder3(&Serial3, A3);
 // Array para indexar
 Encoderino * encoders[] = {&encoder1, &encoder2, &encoder3};
 
-
+Adafruit_SSD1306 display(OLED_RESET);
 void setup() {  
     Serial.begin(115200);
 
@@ -70,9 +72,10 @@ void setup() {
   encoders[1]->init();
   encoders[2]->init();
   ServoGarra.attach(ServoG);
-
+  
   attachInterrupt(digitalPinToInterrupt(ENCODER_1), isr, RISING); // Flanco bajada en el encoder
-
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  display.drawBitmap(30, 16,  marionetadeldemonio, 16, 16, 1);
 }
 
 char command[1024];
@@ -232,4 +235,22 @@ void loop() {
     encoders[0]->goPos(anterior); 
     time = millis(); 
   } 
+
+  /********OLED********/
+ display.clearDisplay();
+
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  int x = encoders[0]->getPos();
+  int y = 300 * (cos(encoders[1]->getPos() * M_PI / 180.0) + cos(encoders[2]->getPos() * M_PI / 180.0));
+  int z = 300 * (sin(encoders[1]->getPos() * M_PI / 180.0) + sin(encoders[2]->getPos() * M_PI / 180.0));
+
+  display.println("Q1: " + String((int) encoders[0]->getPos()) + "mm  X: " + String(x) + "mm");
+  display.println("Q2: " + String((int) encoders[1]->getPos()) + "deg Y: " + String(y) + "mm");
+  display.println("Q3: " + String((int) encoders[2]->getPos()) + "deg Z: " + String(z) + "mm");
+  display.println("Q4: " + String((int) ServoGarra.read()) + "deg");
+
+  display.display();
+  /********OLED********/
 }
