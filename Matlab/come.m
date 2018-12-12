@@ -5,28 +5,25 @@ global ardu;
 offset = 30;
 p = 3;
 T = 10;
-[x2,y2,z2] = directa(220,46,-100);
-z2 = -80;
+
+[x2,y2,z2] = directa(220,deg2rad(50),deg2rad(-96));
 wp1 = ahora;
 %%Punto a ir para recoger ficha 
-wp2 = desde; wp2(3) = wp2(3) + offset;
+wp2 = desde; wp2(2) = wp2(2) - 15;   wp2(3) = wp2(3) + offset;
 wp3 = desde;
-%%Punto para tirar ficha MIRA Y CORRIGE COORDENADAS
+%Punto donde se deja la ficha comía
 wp4 = [x2,y2,z2]; wp4(3) = wp4(3) + offset;
 
 
 move(wp1,wp2,T,p);      pause(T);
-fprintf(ardu,"J4 M2 255");
+fprintf(ardu,"J4 M2 255\n");
 move(wp2,wp3,T/4,p);      pause(T/4);
 move(wp3,wp2,T/4,p);      pause(T/4);
 
 move(wp2,wp4,T,p);      pause(T);
 
-fprintf(ardu,"J4 M2 0");
+fprintf(ardu,"J4 M2 0\n");
 
-
-move(wp4,wp1,T,p);      pause(T);
-move(wp1,wp2,T,p);      pause(T);
 
 end
 
