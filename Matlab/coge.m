@@ -8,30 +8,23 @@ T = 10;
 
 wp1 = ahora;
 %%Punto a ir para recoger ficha
-[x2,y2,z2] = directa(33.000,46,-100);
-z2 = -80;
+[x2,y2,z2] = directa(94,deg2rad(24),deg2rad(-40));
 wp2 = [x2,y2,z2]; wp2(3) = wp2(3) + offset;
 wp3 = [x2,y2,z2];
 %%Punto para colocar ficha
 wp4 = hasta; wp4(3) = wp4(3) + offset;
 wp5 = hasta; 
-
 move(wp1,wp2,T,p);      pause(T);
-fprintf(ardu,"J4 M2 255");
+fprintf(ardu,"J4 M2 255\n");
 move(wp2,wp3,T/4,p);      pause(T/4);
 move(wp3,wp2,T/4,p);      pause(T/4);
 
 move(wp2,wp4,T,p);      pause(T);
 
 move(wp4,wp5,T/4,p);      pause(T/4);
-fprintf(ardu,"J4 M2 0");
+fprintf(ardu,"J4 M2 0\n");
 move(wp5,wp4,T/4,p);      pause(T/4);
-
-move(wp4,wp1,T,p);      pause(T);
-move(wp1,wp2,T,p);      pause(T);
-
 end
-
 
 function move(x0,xf,T,p)
 global ardu;
